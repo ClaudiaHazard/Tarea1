@@ -4,6 +4,8 @@ import (
 	"log"
 	"net"
 
+	"github.com/ClaudiaHazard/Tarea1/conexion"
+
 	"google.golang.org/grpc"
 )
 
@@ -19,4 +21,10 @@ func main() {
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve gRPC server over port 9000: %v", err)
 	}
+
+	s := conexion.Server()
+
+	grpcServer := grpc.NewServer()
+
+	conexion.RegisterConexionServiceServer(grpcServer, &s)
 }

@@ -1,6 +1,8 @@
 syntax = "proto3";
 package conexion;
 
+option go_package = "github.com/example/path/gen;gen";
+
 message Message {
     string body = 1;
 }
