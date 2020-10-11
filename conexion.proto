@@ -1,0 +1,10 @@
+syntax = "proto3";
+package conexion;
+
+message Message {
+    string body = 1;
+}
+
+service ConexionService{
+    rpc SayHello(Message) returns (Message) {}
+}
