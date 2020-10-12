@@ -10,7 +10,7 @@ import (
 	"os"
 	"time"
 
-	enviapaquete "github.com/ClaudiaHazard/Tarea1/Logistica/EnviaPaquete/EnviaPaqueteGo"
+	enviaorden "github.com/ClaudiaHazard/Tarea1/Logistica/EnviaOrden"
 	"google.golang.org/grpc"
 )
 
@@ -110,23 +110,23 @@ func main() {
 
 	var conn *grpc.ClientConn
 
-	conn, err := grpc.Dial(ipport, grpc.WithInsecure(), grpc.WithBlock())
+	conn, err2 := grpc.Dial(ipport, grpc.WithInsecure(), grpc.WithBlock())
 
-	if err != nil {
-		log.Fatalf("did not connect: %s", err)
+	if err2 != nil {
+		log.Fatalf("did not connect: %s", err2)
 	}
 	defer conn.Close()
 
-	fmt.Println("Crea Conexion")
+	fmt.Println("Crea conexion para enviar orden")
 
-	c := enviapaquete.NewConexionServiceClient(conn)
+	c := enviaorden.NewEnviaOrdenServiceClient(conn)
 
 	fmt.Println("Envia Mensaje")
 
-	response, err := c.SayHello(context.Background(), &enviapaquete.Message{Body: "Hola por parte de Cliente!"})
+	response, err2 := c.SayHello(context.Background(), &enviaorden.Message{Body: "Hola por parte de Cliente!"})
 
-	if err != nil {
-		log.Fatalf("Error al llamar SayHello: %s", err)
+	if err2 != nil {
+		log.Fatalf("Error al llamar SayHello: %s", err2)
 	}
 	log.Printf("Respuesta de Logistica: %s", response.Body)
 
