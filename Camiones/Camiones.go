@@ -5,7 +5,7 @@ import (
 
 	"fmt"
 
-	enviapaquete "github.com/ClaudiaHazard/Tarea1/Logistica/EnviaPaquete/EnviaPaqueteGo"
+	enviapaquete "github.com/ClaudiaHazard/Tarea1/Logistica/EnviaPaquete/EnviaPaquete"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
