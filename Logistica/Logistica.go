@@ -5,7 +5,6 @@ import (
 	"net"
 
 	"google.golang.org/grpc"
-	pb
 )
 
 const (
@@ -19,7 +18,7 @@ func main() {
 		log.Fatalf("Failed to listen on port "+port+": %v", err)
 	}
 
-	s := enviapaquete.Server{}
+	//s := enviapaquete.Server{}
 
 	grpcServer := grpc.NewServer()
 
