@@ -1,7 +1,7 @@
 syntax = "proto3";
-package test;
+package main;
 
-option go_package = "github.com/example/path/gen;gen";
+option go_package = "github.com/example/path/gen;sendpaquete";
 
 message Message {
     string body = 1;
