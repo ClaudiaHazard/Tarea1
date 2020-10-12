@@ -12,7 +12,7 @@ import (
 const (
 	port = "50051"
 	//ipport = "10.6.40.161/24:" + port
-	ipport = "Localhost:" + port
+	ipport = "10.6.40.161:" + port
 )
 
 func main() {
