@@ -9,11 +9,12 @@ import (
 )
 
 const (
-	port = "50051"
+	port   = "50051"
+	ipport = "10.6.40.161/24:50051"
 )
 
 func main() {
-	lis, err := net.Listen("tcp", ":"+port)
+	lis, err := net.Listen("tcp", ":"+ipport)
 
 	if err != nil {
 		log.Fatalf("Failed to listen on port "+port+": %v", err)
