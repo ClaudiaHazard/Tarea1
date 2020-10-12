@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"time"
-
 	"github.com/streadway/amqp"
 	//"fmt"
 )
@@ -17,7 +16,7 @@ func failOnError(err error, msg string) {
 //cambiar gusername y password en vm
 
 func main() {
-	conn, err := amqp.Dial("amqp://test:test@10.6.40.1:5672/")
+	conn, err := amqp.Dial("amqp://test:test@10.6.40.162:5672/")
 	//conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
 	failOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
@@ -36,7 +35,7 @@ func main() {
 	)
 	failOnError(err, "Failed to declare a queue")
 
-	for {
+	for{
 		body := "Hello World!"
 		err = ch.Publish(
 			"",     // exchange
@@ -49,6 +48,6 @@ func main() {
 			})
 		log.Printf(" [x] Sent %s", body)
 		failOnError(err, "Failed to publish a message")
-		time.Sleep(time.Duration(1) * time.Second)
+		time.Sleep(time.Duration(1) * time.Second) 
 	}
 }
