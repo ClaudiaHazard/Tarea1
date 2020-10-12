@@ -9,15 +9,16 @@ import (
 	"google.golang.org/grpc"
 )
 
+//IP local 10.6.40.162
 const (
 	port = "50051"
 	//ipport = "10.6.40.161/24:" + port
-	ipport = "10.6.40.162:" + port
+	ipport = "10.6.40.162/24:" + port
 )
 
 func main() {
 	fmt.Println("Inicia Logistica")
-	lis, err := net.Listen("tcp", ":"+port)
+	lis, err := net.Listen("tcp", ipport)
 
 	if err != nil {
 		log.Fatalf("Failed to listen on port "+port+": %v", err)

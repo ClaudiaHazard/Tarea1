@@ -10,8 +10,9 @@ import (
 	"google.golang.org/grpc"
 )
 
+//IP local 10.6.40.161
 const (
-	ipport = "10.6.40.162:50051"
+	ipport = "10.6.40.162/24:50051"
 )
 
 func main() {
