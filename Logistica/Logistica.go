@@ -18,6 +18,7 @@ const (
 	ipportCliente  = "10.6.40.162:" + portCliente
 )
 
+//Para usar en local, cambiar ipportCamiones por ":"+portCamiones y ipportCliente por ":"+portCliente
 func main() {
 	fmt.Println("Inicia Logistica en espera de mensajes Camiones")
 	lis, err := net.Listen("tcp", ipportCamiones)
