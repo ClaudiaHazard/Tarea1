@@ -1,4 +1,4 @@
-package main
+package servidorcamiones
 
 import (
 	"fmt"
@@ -15,8 +15,8 @@ const (
 	ipportCamiones = "10.6.40.162:" + portCamiones
 )
 
-//Para usar en local, cambiar ipportCamiones por ":"+portCamiones y ipportCliente por ":"+portCliente
-func main() {
+//IniciarServidorCamiones Para usar en local, cambiar ipportCamiones por ":"+portCamiones y ipportCliente por ":"+portCliente
+func IniciarServidorCamiones() {
 	fmt.Println("Inicia Logistica en espera de mensajes Camiones")
 	lis, err := net.Listen("tcp", ":"+portCamiones)
 
