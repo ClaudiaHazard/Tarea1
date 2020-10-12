@@ -13,12 +13,12 @@ import (
 const (
 	port = "50051"
 	//ipport = "10.6.40.161/24:" + port
-	ipport = "10.6.40.162:" + port
+	//ipport = "10.6.40.162:" + port
 )
 
 func main() {
 	fmt.Println("Inicia Logistica")
-	lis, err := net.Listen("tcp", ipport)
+	lis, err := net.Listen("tcp", port)
 
 	if err != nil {
 		log.Fatalf("Failed to listen on port "+port+": %v", err)
