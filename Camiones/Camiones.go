@@ -11,14 +11,14 @@ import (
 )
 
 const (
-	port = "50051"
+	ipport = "10.6.40.162/24:50051"
 )
 
 func main() {
 	fmt.Println("Helloww world")
 
 	var conn *grpc.ClientConn
-	conn, err := grpc.Dial(":"+port, grpc.WithInsecure())
+	conn, err := grpc.Dial(ipport, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		log.Fatalf("did not connect: %s", err)
 	}
