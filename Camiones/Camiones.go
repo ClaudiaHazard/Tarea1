@@ -29,8 +29,7 @@ func main() {
 
 	fmt.Println("Crea conexion para envio")
 
-	c := enviapaquete.NewEnviaPaqueteServiceClient(conn)
-
+	c := enviapaquete.NewConexionServiceClient(conn)
 	fmt.Println("Envia Mensaje")
 
 	response, err := c.SayHello(context.Background(), &enviapaquete.Message{Body: "Hola por parte de Camiones!"})

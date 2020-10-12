@@ -10,6 +10,7 @@ import (
 	"os"
 	"time"
 
+	enviapaquete "github.com/ClaudiaHazard/Tarea1/Logistica/EnviaPaquete/EnviaPaqueteGo"
 	"google.golang.org/grpc"
 )
 
@@ -118,7 +119,7 @@ func main() {
 
 	fmt.Println("Crea Conexion")
 
-	c := enviapaquete.NewEnviaPaqueteServiceClient(conn)
+	c := enviapaquete.NewConexionServiceClient(conn)
 
 	fmt.Println("Envia Mensaje")
 
