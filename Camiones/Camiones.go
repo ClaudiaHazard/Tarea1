@@ -15,7 +15,7 @@ const (
 )
 
 func main() {
-	fmt.Println("Helloww world")
+	fmt.Println("Inicia Camiones")
 
 	var conn *grpc.ClientConn
 	conn, err := grpc.Dial(ipport, grpc.WithInsecure(), grpc.WithBlock())
@@ -26,7 +26,12 @@ func main() {
 
 	c := enviapaquete.NewConexionServiceClient(conn)
 
+	fmt.Println("Crea Conexion")
+
 	response, err := c.SayHello(context.Background(), &enviapaquete.Message{Body: "Hello From Client!"})
+
+	fmt.Println("Envia Mensaje")
+
 	if err != nil {
 		log.Fatalf("Error when calling SayHello: %s", err)
 	}

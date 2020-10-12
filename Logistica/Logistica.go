@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net"
 
@@ -15,16 +16,19 @@ const (
 )
 
 func main() {
+	fmt.Println("Inicia Logistica")
 	lis, err := net.Listen("tcp", ipport)
 
 	if err != nil {
 		log.Fatalf("Failed to listen on port "+port+": %v", err)
 	}
 
+	fmt.Println("Crea server")
 	grpcServer := grpc.NewServer()
 
 	s := enviapaquete.Server{}
 
+	fmt.Println("Crea Conexion")
 	enviapaquete.RegisterConexionServiceServer(grpcServer, &s)
 
 	if err := grpcServer.Serve(lis); err != nil {
