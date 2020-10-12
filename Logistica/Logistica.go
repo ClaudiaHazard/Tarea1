@@ -9,8 +9,9 @@ import (
 )
 
 const (
-	port   = "50051"
-	ipport = "10.6.40.161/24:" + port
+	port = "50051"
+	//ipport = "10.6.40.161/24:" + port
+	ipport = "localhost:" + port
 )
 
 func main() {
