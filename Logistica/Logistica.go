@@ -17,7 +17,7 @@ const (
 
 func main() {
 	fmt.Println("Inicia Logistica")
-	lis, err := net.Listen("tcp", ipport)
+	lis, err := net.Listen("tcp", port)
 
 	if err != nil {
 		log.Fatalf("Failed to listen on port "+port+": %v", err)
