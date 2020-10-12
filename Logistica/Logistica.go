@@ -23,7 +23,7 @@ func main() {
 
 	s := enviapaquete.Server{}
 
-	enviapaquete.RegisterConexionServiceServer(grpcServer)
+	enviapaquete.RegisterConexionServiceServer(grpcServer, s)
 
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve gRPC server over "+port+": %v", err)
