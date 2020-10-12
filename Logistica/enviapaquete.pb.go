@@ -4,7 +4,7 @@
 // 	protoc        v3.13.0
 // source: enviapaquete.proto
 
-package enviapaquete
+package sendpaquete
 
 import (
 	context "context"
