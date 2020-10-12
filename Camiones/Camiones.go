@@ -12,7 +12,7 @@ import (
 
 //IP local 10.6.40.161
 const (
-	ipport = "10.6.40.162/24:50051"
+	ipport = "10.6.40.162:50051"
 )
 
 func main() {
@@ -20,7 +20,9 @@ func main() {
 
 	var conn *grpc.ClientConn
 
-	conn, err := grpc.Dial(ipport, grpc.WithInsecure(), grpc.WithBlock())
+	//conn, err := grpc.Dial(ipport, grpc.WithInsecure(), grpc.WithBlock())
+	conn, err := grpc.Dial(ipport, grpc.WithInsecure())
+
 	if err != nil {
 		log.Fatalf("did not connect: %s", err)
 	}
