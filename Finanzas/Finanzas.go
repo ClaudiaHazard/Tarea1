@@ -15,7 +15,7 @@ func failOnError(err error, msg string) {
 
 //cambiar gusername y password en vm
 func main() {
-	conn, err := amqp.Dial("amqp://test:test@localhost:5672/")
+	conn, err := amqp.Dial("amqp://test:test@10.6.40.162:5672/")
 	//conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
 	failOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
