@@ -20,39 +20,32 @@ const (
 
 //Para usar en local, cambiar ipportCamiones por ":"+portCamiones y ipportCliente por ":"+portCliente
 func main() {
-	fmt.Println("Inicia Logistica en espera de mensajes Camiones")
+
 	lis, err := net.Listen("tcp", ":"+portCamiones)
+	lis, err2 := net.Listen("tcp", ":"+portCliente)
 
 	if err != nil {
 		log.Fatalf("Failed to listen on port "+portCamiones+": %v", err)
 	}
 
-	fmt.Println("Crea server para Camiones")
-	grpcServerCamion := grpc.NewServer()
-
-	sCamion := enviapaquete.Server{}
-
-	fmt.Println("Crea Conexion de paquetes del Camion")
-	enviapaquete.RegisterEnviaPaqueteServiceServer(grpcServerCamion, &sCamion)
-
-	if err := grpcServerCamion.Serve(lis); err != nil {
-		log.Fatalf("Failed to serve gRPC server over "+portCamiones+": %v", err)
-	}
-
-	fmt.Println("Inicia Logistica en espera de mensajes Clientes")
-	lis, err2 := net.Listen("tcp", ":"+portCliente)
-
 	if err2 != nil {
 		log.Fatalf("Failed to listen on port "+portCliente+": %v", err2)
 	}
 
-	fmt.Println("Crea server para Clientes")
+	grpcServerCamion := grpc.NewServer()
 	grpcServerCliente := grpc.NewServer()
 
+	sCamion := enviapaquete.Server{}
 	sCliente := enviaorden.Server{}
 
-	fmt.Println("Crea Conexion de ordenes Cliente")
+	fmt.Println("Envia paquetes")
+	enviapaquete.RegisterEnviaPaqueteServiceServer(grpcServerCamion, &sCamion)
+	fmt.Println("Envia ordenes")
 	enviaorden.RegisterEnviaOrdenServiceServer(grpcServerCliente, &sCliente)
+
+	if err := grpcServerCamion.Serve(lis); err != nil {
+		log.Fatalf("Failed to serve gRPC server over "+portCamiones+": %v", err)
+	}
 
 	if err2 := grpcServerCliente.Serve(lis); err2 != nil {
 		log.Fatalf("Failed to serve gRPC server over "+portCliente+": %v", err2)

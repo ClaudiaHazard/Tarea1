@@ -2,7 +2,8 @@ package servidorcliente
 
 import (
 	"fmt"
-	"net/http"
+	"log"
+	"net"
 
 	enviaorden "github.com/ClaudiaHazard/Tarea1/Logistica/EnviaOrden"
 	"google.golang.org/grpc"
@@ -18,11 +19,11 @@ const (
 func IniciarServidorCliente() {
 
 	fmt.Println("Inicia Logistica en espera de mensajes Clientes")
-	//lis, err2 := net.Listen("tcp", ":"+portCliente)
+	lis, err2 := net.Listen("tcp", ":"+portCliente)
 
-	//if err2 != nil {
-	//	log.Fatalf("Failed to listen on port "+portCliente+": %v", err2)
-	//}
+	if err2 != nil {
+		log.Fatalf("Failed to listen on port "+portCliente+": %v", err2)
+	}
 
 	fmt.Println("Crea server para Clientes")
 	grpcServerCliente := grpc.NewServer()
@@ -32,6 +33,7 @@ func IniciarServidorCliente() {
 	fmt.Println("Crea Conexion de ordenes Cliente")
 	enviaorden.RegisterEnviaOrdenServiceServer(grpcServerCliente, &sCliente)
 
-	http.ListenAndServe(":"+portCliente, grpcServerCliente)
-
+	if err2 := grpcServerCliente.Serve(lis); err2 != nil {
+		log.Fatalf("Failed to serve gRPC server over "+portCliente+": %v", err2)
+	}
 }
