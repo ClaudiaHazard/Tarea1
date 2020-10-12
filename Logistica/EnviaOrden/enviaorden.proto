@@ -1,0 +1,12 @@
+syntax = "proto3";
+package enviaorden;
+
+option go_package = "github.com/example/path/gen;enviaorden";
+
+message Message {
+    string body = 1;
+}
+
+service EnviaOrdenService{
+    rpc SayHello(Message) returns (Message) {}
+}

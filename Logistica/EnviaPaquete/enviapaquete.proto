@@ -7,6 +7,6 @@ message Message {
     string body = 1;
 }
 
-service ConexionService{
+service EnviaPaqueteService{
     rpc SayHello(Message) returns (Message) {}
 }

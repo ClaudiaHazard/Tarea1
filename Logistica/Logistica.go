@@ -28,10 +28,9 @@ func main() {
 
 	s := enviapaquete.Server{}
 
-	fmt.Println("Crea Conexion")
-	enviapaquete.RegisterConexionServiceServer(grpcServer, &s)
+	fmt.Println("Crea Conexion Camion")
+	enviapaquete.RegisterEnviaPaqueteServiceServer(grpcServer, &s)
 
-	fmt.Println("Funciono lo creado")
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve gRPC server over "+port+": %v", err)
 	}

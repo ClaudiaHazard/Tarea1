@@ -20,24 +20,23 @@ func main() {
 
 	var conn *grpc.ClientConn
 
-	//conn, err := grpc.Dial(ipport, grpc.WithInsecure(), grpc.WithBlock())
-	conn, err := grpc.Dial(ipport, grpc.WithInsecure())
+	conn, err := grpc.Dial(ipport, grpc.WithInsecure(), grpc.WithBlock())
 
 	if err != nil {
 		log.Fatalf("did not connect: %s", err)
 	}
 	defer conn.Close()
 
-	fmt.Println("Crea Conexion")
+	fmt.Println("Crea conexion para envio")
 
-	c := enviapaquete.NewConexionServiceClient(conn)
+	c := enviapaquete.NewEnviaPaqueteServiceClient(conn)
 
 	fmt.Println("Envia Mensaje")
 
-	response, err := c.SayHello(context.Background(), &enviapaquete.Message{Body: "Hello From Client!"})
+	response, err := c.SayHello(context.Background(), &enviapaquete.Message{Body: "Hola por parte de Camiones!"})
 
 	if err != nil {
-		log.Fatalf("Error when calling SayHello: %s", err)
+		log.Fatalf("Error al llamar SayHello: %s", err)
 	}
-	log.Printf("Response from server: %s", response.Body)
+	log.Printf("Respuesta de Logistica: %s", response.Body)
 }
