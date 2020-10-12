@@ -5,33 +5,55 @@ import (
 	"log"
 	"net"
 
+	enviaorden "github.com/ClaudiaHazard/Tarea1/Logistica/EnviaOrden"
 	enviapaquete "github.com/ClaudiaHazard/Tarea1/Logistica/EnviaPaquete"
 	"google.golang.org/grpc"
 )
 
 //IP local 10.6.40.162
 const (
-	port   = "50051"
-	ipport = "10.6.40.162:" + port
+	portCamiones   = "50051"
+	ipportCamiones = "10.6.40.162:" + portCamiones
+	portCliente    = "50052"
+	ipportCliente  = "10.6.40.162:" + portCliente
 )
 
 func main() {
-	fmt.Println("Inicia Logistica")
-	lis, err := net.Listen("tcp", ipport)
+	fmt.Println("Inicia Logistica en espera de mensajes Camiones")
+	lis, err := net.Listen("tcp", ipportCamiones)
 
 	if err != nil {
-		log.Fatalf("Failed to listen on port "+port+": %v", err)
+		log.Fatalf("Failed to listen on port "+portCamiones+": %v", err)
 	}
 
-	fmt.Println("Crea server")
-	grpcServer := grpc.NewServer()
+	fmt.Println("Crea server para Camiones")
+	grpcServerCamion := grpc.NewServer()
 
-	s := enviapaquete.Server{}
+	sCamion := enviapaquete.Server{}
 
-	fmt.Println("Crea Conexion Camion")
-	enviapaquete.RegisterEnviaPaqueteServiceServer(grpcServer, &s)
+	fmt.Println("Crea Conexion de paquetes del Camion")
+	enviapaquete.RegisterEnviaPaqueteServiceServer(grpcServerCamion, &sCamion)
 
-	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("Failed to serve gRPC server over "+port+": %v", err)
+	if err := grpcServerCamion.Serve(lis); err != nil {
+		log.Fatalf("Failed to serve gRPC server over "+portCamiones+": %v", err)
+	}
+
+	fmt.Println("Inicia Logistica en espera de mensajes Clientes")
+	lis, err2 := net.Listen("tcp", ipportCliente)
+
+	if err2 != nil {
+		log.Fatalf("Failed to listen on port "+portCliente+": %v", err2)
+	}
+
+	fmt.Println("Crea server para Clientes")
+	grpcServerCliente := grpc.NewServer()
+
+	sCliente := enviaorden.Server{}
+
+	fmt.Println("Crea Conexion de ordenes Cliente")
+	enviaorden.RegisterEnviaOrdenServiceServer(grpcServerCliente, &sCliente)
+
+	if err2 := grpcServerCliente.Serve(lis); err2 != nil {
+		log.Fatalf("Failed to serve gRPC server over "+portCliente+": %v", err2)
 	}
 }
