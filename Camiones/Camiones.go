@@ -5,7 +5,7 @@ import (
 
 	"fmt"
 
-	enviapaquete "github.com/ClaudiaHazard/Tarea1/Logistica/EnviaPaquete/EnviaPaquete"
+	enviapaquete "github.com/ClaudiaHazard/Tarea1/Logistica/EnviaPaquete"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -29,7 +29,7 @@ func main() {
 
 	fmt.Println("Crea conexion para envio")
 
-	c := enviapaquete.NewConexionServiceClient(conn)
+	c := enviapaquete.NewEnviaPaqueteServiceClient(conn)
 	fmt.Println("Envia Mensaje")
 
 	response, err := c.SayHello(context.Background(), &enviapaquete.Message{Body: "Hola por parte de Camiones!"})
