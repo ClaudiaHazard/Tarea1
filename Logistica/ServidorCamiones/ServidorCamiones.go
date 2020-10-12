@@ -31,7 +31,7 @@ func IniciarServidorCamiones() {
 	fmt.Println("Crea Conexion de paquetes del Camion")
 	enviapaquete.RegisterEnviaPaqueteServiceServer(grpcServerCamion, &sCamion)
 
-	http.ListenAndServe(":"+portCliente, grpcServerCliente)
+	http.ListenAndServe(":"+portCamiones, grpcServerCamion)
 
 	//if err := grpcServerCamion.Serve(lis); err != nil {
 	//	log.Fatalf("Failed to serve gRPC server over "+portCamiones+": %v", err)
