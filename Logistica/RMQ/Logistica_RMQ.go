@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"time"
+
 	"github.com/streadway/amqp"
 	//"fmt"
 )
@@ -35,7 +36,7 @@ func main() {
 	)
 	failOnError(err, "Failed to declare a queue")
 
-	for{
+	for {
 		body := "Hello World!"
 		err = ch.Publish(
 			"",     // exchange
@@ -48,6 +49,6 @@ func main() {
 			})
 		log.Printf(" [x] Sent %s", body)
 		failOnError(err, "Failed to publish a message")
-		time.Sleep(time.Duration(1) * time.Second) 
+		time.Sleep(time.Duration(1) * time.Second)
 	}
 }
