@@ -24,13 +24,13 @@ func main() {
 	}
 	defer conn.Close()
 
-	c := enviapaquete.NewConexionServiceClient(conn)
-
 	fmt.Println("Crea Conexion")
 
-	response, err := c.SayHello(context.Background(), &enviapaquete.Message{Body: "Hello From Client!"})
+	c := enviapaquete.NewConexionServiceClient(conn)
 
 	fmt.Println("Envia Mensaje")
+
+	response, err := c.SayHello(context.Background(), &enviapaquete.Message{Body: "Hello From Client!"})
 
 	if err != nil {
 		log.Fatalf("Error when calling SayHello: %s", err)
