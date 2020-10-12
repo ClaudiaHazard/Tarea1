@@ -18,7 +18,9 @@ func main() {
 	fmt.Println("Inicia Camiones")
 
 	var conn *grpc.ClientConn
-	conn, err := grpc.Dial(ipport, grpc.WithInsecure(), grpc.WithBlock())
+
+	conn, err := grpc.Dial(ipport, grpc.WithInsecure())
+
 	if err != nil {
 		log.Fatalf("did not connect: %s", err)
 	}
