@@ -3,13 +3,11 @@ package enviapaquete
 import (
 	"log"
 
-	enviapaquete "github.com/ClaudiaHazard/Tarea1/Logistica/EnviaPaquete"
 	"golang.org/x/net/context"
 )
 
 //Server Test
 type Server struct {
-	enviapaquete.UnimplementedConexionServiceServer
 }
 
 //SayHello Test

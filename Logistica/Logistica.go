@@ -4,7 +4,7 @@ import (
 	"log"
 	"net"
 
-	enviapaquete "github.com/ClaudiaHazard/Tarea1/Logistica/EnviaPaquete"
+	//enviapaquete "github.com/ClaudiaHazard/Tarea1/Logistica/EnviaPaquete"
 	"google.golang.org/grpc"
 )
 
@@ -21,9 +21,9 @@ func main() {
 
 	grpcServer := grpc.NewServer()
 
-	s := enviapaquete.Server{}
+	s :=
 
-	enviapaquete.RegisterConexionServiceServer(grpcServer, s)
+		RegisterConexionServiceServer(grpcServer, s)
 
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve gRPC server over "+port+": %v", err)
