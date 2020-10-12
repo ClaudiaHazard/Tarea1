@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	ipport = "10.6.40.162/24:50051"
+	ipport = "10.6.40.162:50051"
 )
 
 func main() {
