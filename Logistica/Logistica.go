@@ -6,47 +6,36 @@ import (
 	"net"
 
 	enviaorden "github.com/ClaudiaHazard/Tarea1/Logistica/EnviaOrden"
+	enviapaquete "github.com/ClaudiaHazard/Tarea1/Logistica/EnviaPaquete"
 	"google.golang.org/grpc"
 )
 
 //IP local 10.6.40.162
 const (
-	portCamiones   = "50051"
-	ipportCamiones = "10.6.40.162:" + portCamiones
-	portCliente    = "50052"
-	ipportCliente  = "10.6.40.162:" + portCliente
+	port   = "50051"
+	ipport = "10.6.40.162:" + port
 )
 
-//Para usar en local, cambiar ipportCamiones por ":"+portCamiones y ipportCliente por ":"+portCliente
+//Para usar en local, cambiar ipport por ":"+port
 func main() {
 
-	//lis, err := net.Listen("tcp", ":"+portCamiones)
-	lis2, err2 := net.Listen("tcp", ":"+portCliente)
+	lis, err := net.Listen("tcp", ":"+port)
 
-	//if err != nil {
-	//	log.Fatalf("Failed to listen on port "+portCamiones+": %v", err)
-	//}
-
-	if err2 != nil {
-		log.Fatalf("Failed to listen on port "+portCliente+": %v", err2)
+	if err != nil {
+		log.Fatalf("Failed to listen on port "+port+": %v", err)
 	}
 
-	//grpcServerCamion := grpc.NewServer()
-	grpcServerCliente := grpc.NewServer()
+	grpcServer := grpc.NewServer()
 
-	//sCamion := enviapaquete.Server{}
+	sCamion := enviapaquete.Server{}
 	sCliente := enviaorden.Server{}
 
-	//fmt.Println("Envia paquetes")
-	//enviapaquete.RegisterEnviaPaqueteServiceServer(grpcServerCamion, &sCamion)
+	fmt.Println("Envia paquetes")
+	enviapaquete.RegisterEnviaPaqueteServiceServer(grpcServer, &sCamion)
 	fmt.Println("Envia ordenes")
-	enviaorden.RegisterEnviaOrdenServiceServer(grpcServerCliente, &sCliente)
+	enviaorden.RegisterEnviaOrdenServiceServer(grpcServer, &sCliente)
 
-	//if err := grpcServerCamion.Serve(lis); err != nil {
-	//	log.Fatalf("Failed to serve gRPC server over "+portCamiones+": %v", err)
-	//}
-
-	if err2 := grpcServerCliente.Serve(lis2); err2 != nil {
-		log.Fatalf("Failed to serve gRPC server over "+portCliente+": %v", err2)
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Fatalf("Failed to serve gRPC server over "+port+": %v", err)
 	}
 }
