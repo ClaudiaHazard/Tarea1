@@ -6,7 +6,6 @@ import (
 	"net"
 
 	enviaorden "github.com/ClaudiaHazard/Tarea1/Logistica/EnviaOrden"
-	enviapaquete "github.com/ClaudiaHazard/Tarea1/Logistica/EnviaPaquete"
 	"google.golang.org/grpc"
 )
 
@@ -21,31 +20,31 @@ const (
 //Para usar en local, cambiar ipportCamiones por ":"+portCamiones y ipportCliente por ":"+portCliente
 func main() {
 
-	lis, err := net.Listen("tcp", ":"+portCamiones)
+	//lis, err := net.Listen("tcp", ":"+portCamiones)
 	lis, err2 := net.Listen("tcp", ":"+portCliente)
 
-	if err != nil {
-		log.Fatalf("Failed to listen on port "+portCamiones+": %v", err)
-	}
+	//if err != nil {
+	//	log.Fatalf("Failed to listen on port "+portCamiones+": %v", err)
+	//}
 
 	if err2 != nil {
 		log.Fatalf("Failed to listen on port "+portCliente+": %v", err2)
 	}
 
-	grpcServerCamion := grpc.NewServer()
+	//grpcServerCamion := grpc.NewServer()
 	grpcServerCliente := grpc.NewServer()
 
-	sCamion := enviapaquete.Server{}
+	//sCamion := enviapaquete.Server{}
 	sCliente := enviaorden.Server{}
 
-	fmt.Println("Envia paquetes")
-	enviapaquete.RegisterEnviaPaqueteServiceServer(grpcServerCamion, &sCamion)
+	//fmt.Println("Envia paquetes")
+	//enviapaquete.RegisterEnviaPaqueteServiceServer(grpcServerCamion, &sCamion)
 	fmt.Println("Envia ordenes")
 	enviaorden.RegisterEnviaOrdenServiceServer(grpcServerCliente, &sCliente)
 
-	if err := grpcServerCamion.Serve(lis); err != nil {
-		log.Fatalf("Failed to serve gRPC server over "+portCamiones+": %v", err)
-	}
+	//if err := grpcServerCamion.Serve(lis); err != nil {
+	//	log.Fatalf("Failed to serve gRPC server over "+portCamiones+": %v", err)
+	//}
 
 	if err2 := grpcServerCliente.Serve(lis); err2 != nil {
 		log.Fatalf("Failed to serve gRPC server over "+portCliente+": %v", err2)
