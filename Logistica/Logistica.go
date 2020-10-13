@@ -21,7 +21,7 @@ const (
 func main() {
 
 	//lis, err := net.Listen("tcp", ":"+portCamiones)
-	lis, err2 := net.Listen("tcp", ":"+portCliente)
+	lis2, err2 := net.Listen("tcp", ":"+portCliente)
 
 	//if err != nil {
 	//	log.Fatalf("Failed to listen on port "+portCamiones+": %v", err)
@@ -46,7 +46,7 @@ func main() {
 	//	log.Fatalf("Failed to serve gRPC server over "+portCamiones+": %v", err)
 	//}
 
-	if err2 := grpcServerCliente.Serve(lis); err2 != nil {
+	if err2 := grpcServerCliente.Serve(lis2); err2 != nil {
 		log.Fatalf("Failed to serve gRPC server over "+portCliente+": %v", err2)
 	}
 }
