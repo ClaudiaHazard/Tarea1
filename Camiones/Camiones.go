@@ -1,27 +1,65 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"net"
 	"time"
 
-	enviapaquete "github.com/ClaudiaHazard/Tarea1/Logistica/EnviaPaquete"
+	enviainstrucciones "github.com/ClaudiaHazard/Tarea1/Camiones/EnviaInstrucciones"
+	informapaquete "github.com/ClaudiaHazard/Tarea1/Logistica/InformaPaquete"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 
 //IP local 10.6.40.161
 const (
-	//ipport = "10.6.40.162:50051"
-	ipport = ":50051"
+	//ipportLogistica = "10.6.40.162:50051"
+	ipportLogistica = ":50051"
+	//ipportCamiones = "10.6.40.161:50052"
+	ipportCamiones = ":50052"
 )
 
-//EnviaPaquete de Camion a Logistica
-func EnviaPaquete(conn *grpc.ClientConn) string {
-	c := enviapaquete.NewEnviaPaqueteServiceClient(conn)
-	response, err := c.SayHello(context.Background(), &enviapaquete.Message{Body: "Hola por parte de Camiones!"})
+//IniciaServidor inicia servidor listen para los servicios correspondientes
+func IniciaServidor() {
+	lis, err := net.Listen("tcp", ":"+ipportCamiones)
 
 	if err != nil {
-		log.Fatalf("Error al llamar SayHello: %s", err)
+		log.Fatalf("Failed to listen on "+ipportCamiones+": %v", err)
+	}
+
+	grpcServer := grpc.NewServer()
+
+	sLogistica := enviainstrucciones.Server{}
+
+	fmt.Println("En espera de instrucciones de reparto")
+	enviainstrucciones.RegisterEnviaInstruccionesServiceServer(grpcServer, &sLogistica)
+
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Fatalf("Failed to serve gRPC server over "+ipportCamiones+": %v", err)
+	}
+}
+
+//IniciaCliente inicia conexion cliente
+func IniciaCliente() {
+	var conn *grpc.ClientConn
+
+	conn, err := grpc.Dial(ipportLogistica, grpc.WithInsecure(), grpc.WithBlock())
+
+	if err != nil {
+		log.Fatalf("did not connect: %s", err)
+	}
+	defer conn.Close()
+	return conn
+}
+
+//InformaPaqueteLogistica Camion informa estado del paquete a Logistica
+func InformaPaqueteLogistica(conn *grpc.ClientConn) string {
+	c := informapaquete.NewInformaPaqueteServiceClient(conn)
+	response, err := c.InformaPaquete(context.Background(), &informapaquete.Message{Body: "Hola por parte de Camiones!"})
+
+	if err != nil {
+		log.Fatalf("Error al llamar InformaPaquete: %s", err)
 	}
 
 	log.Printf("Respuesta de Logistica: %s", response.Body)
@@ -29,18 +67,11 @@ func EnviaPaquete(conn *grpc.ClientConn) string {
 }
 
 func main() {
+	IniciaServidor()
+	var conn = IniciaCliente()
 
-	var conn *grpc.ClientConn
-
-	conn, err := grpc.Dial(ipport, grpc.WithInsecure(), grpc.WithBlock())
-
-	if err != nil {
-		log.Fatalf("did not connect: %s", err)
-	}
-	defer conn.Close()
-
-	go EnviaPaquete(conn)
-	go EnviaPaquete(conn)
+	go InformaPaqueteLogistica(conn)
+	go InformaPaqueteLogistica(conn)
 
 	time.Sleep(10 * time.Second)
 

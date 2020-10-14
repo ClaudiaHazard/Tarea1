@@ -20,15 +20,15 @@ const (
 	ipport = ":50051"
 )
 
-//EnviaOrden de Cliente a Logistica
-func EnviaOrden(conn *grpc.ClientConn) string {
+//EnviaOrdenCliente de Cliente a Logistica
+func EnviaOrdenCliente(conn *grpc.ClientConn) string {
 
 	c := enviaorden.NewEnviaOrdenServiceClient(conn)
 
-	response, err2 := c.SayHello(context.Background(), &enviaorden.Message{Body: "Hola por parte de Cliente!"})
+	response, err2 := c.EnviaOrden(context.Background(), &enviaorden.Message{Body: "Hola por parte de Cliente!"})
 
 	if err2 != nil {
-		log.Fatalf("Error al llamar SayHello: %s", err2)
+		log.Fatalf("Error al llamar EnviaOrden: %s", err2)
 	}
 	log.Printf("Respuesta de Logistica: %s", response.Body)
 
@@ -46,7 +46,7 @@ func main() {
 	}
 	defer conn.Close()
 
-	EnviaOrden(conn)
+	EnviaOrdenCliente(conn)
 
 	fmt.Println("Ingrese tipo de cliente: ")
 	var cli string

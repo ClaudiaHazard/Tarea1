@@ -8,5 +8,5 @@ message Message {
 }
 
 service EnviaOrdenService{
-    rpc SayHello(Message) returns (Message) {}
+    rpc EnviaOrden(Message) returns (Message) {}
 }
