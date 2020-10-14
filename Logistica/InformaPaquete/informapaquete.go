@@ -8,6 +8,7 @@ import (
 
 //Server simple
 type Server struct {
+	id int
 }
 
 //InformaPaquete recibe paquete de Camiones en Logistica

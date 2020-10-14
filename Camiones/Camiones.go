@@ -16,13 +16,13 @@ import (
 const (
 	//ipportLogistica = "10.6.40.162:50051"
 	ipportLogistica = ":50051"
-	//ipportCamiones = "10.6.40.161:50052"
-	ipportCamiones = ":50052"
+	//ipportCamiones = "10.6.40.161:50051"
+	ipportCamiones = ":50051"
 )
 
 //IniciaServidor inicia servidor listen para los servicios correspondientes
 func IniciaServidor() {
-	lis, err := net.Listen("tcp", ":"+ipportCamiones)
+	lis, err := net.Listen("tcp", ipportCamiones)
 
 	if err != nil {
 		log.Fatalf("Failed to listen on "+ipportCamiones+": %v", err)
@@ -41,7 +41,7 @@ func IniciaServidor() {
 }
 
 //IniciaCliente inicia conexion cliente
-func IniciaCliente() {
+func IniciaCliente() *grpc.ClientConn {
 	var conn *grpc.ClientConn
 
 	conn, err := grpc.Dial(ipportLogistica, grpc.WithInsecure(), grpc.WithBlock())
@@ -67,12 +67,12 @@ func InformaPaqueteLogistica(conn *grpc.ClientConn) string {
 }
 
 func main() {
-	IniciaServidor()
+
+	time.Sleep(10 * time.Second)
+
 	var conn = IniciaCliente()
 
 	go InformaPaqueteLogistica(conn)
 	go InformaPaqueteLogistica(conn)
-
-	time.Sleep(10 * time.Second)
 
 }

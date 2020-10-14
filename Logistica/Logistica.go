@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"time"
 
 	enviainstrucciones "github.com/ClaudiaHazard/Tarea1/Camiones/EnviaInstrucciones"
 	enviaorden "github.com/ClaudiaHazard/Tarea1/Logistica/EnviaOrden"
@@ -17,8 +16,8 @@ import (
 const (
 	//ipportLogistica = "10.6.40.162:50051"
 	ipportLogistica = ":50051"
-	//ipportCamiones = "10.6.40.161:50052"
-	ipportCamiones = ":50052"
+	//ipportCamiones = "10.6.40.161:50051"
+	ipportCamiones = ":50051"
 )
 
 //IniciaServidor inicia servidor listen para los servicios correspondientes
@@ -31,11 +30,11 @@ func IniciaServidor() {
 
 	grpcServer := grpc.NewServer()
 
-	sCamion := informapaquete.Server{}
+	sCamion := informapaquete.Server{1}
 	sCliente := enviaorden.Server{}
 
 	fmt.Println("En espera de Informacion paquetes")
-	informapaquete.RegisterEnviaPaqueteServiceServer(grpcServer, &sCamion)
+	informapaquete.RegisterInformaPaqueteServiceServer(grpcServer, &sCamion)
 	fmt.Println("En espera de nuevas ordenes de cliente")
 	enviaorden.RegisterEnviaOrdenServiceServer(grpcServer, &sCliente)
 
@@ -45,7 +44,7 @@ func IniciaServidor() {
 }
 
 //IniciaCliente inicia conexion cliente
-func IniciaCliente() {
+func IniciaCliente() *grpc.ClientConn {
 	var conn *grpc.ClientConn
 
 	conn, err := grpc.Dial(ipportCamiones, grpc.WithInsecure(), grpc.WithBlock())
@@ -72,13 +71,6 @@ func EnviaInstrucciones(conn *grpc.ClientConn) string {
 
 //Para usar en local, cambiar ipport por ":"+port
 func main() {
-	IniciaServidor()
-
-	var conn = IniciaCliente()
-
-	go EnviaInstrucciones(conn)
-	go EnviaInstrucciones(conn)
-
-	time.Sleep(10 * time.Second)
+	go IniciaServidor()
 
 }
