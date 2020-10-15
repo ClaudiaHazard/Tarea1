@@ -1,7 +1,7 @@
 syntax = "proto3";
-package serviciomensajeria;
+package sm;
 
-option go_package = "github.com/example/path/gen;serviciomensajeria";
+option go_package = "github.com/example/path/gen;sm";
 
 message Message {
     string body = 1;
@@ -39,9 +39,11 @@ message Orden {
 }
 
 service MensajeriaService{
+    //Camion
     rpc EntregaPosicion(InformacionPaquete) returns (Message) {}
     rpc InformaEntrega(Message) returns (Message) {}
     rpc RecibeInstrucciones(Message) returns (Paquete) {}
+    //Cliente
     rpc RealizaOrden(Orden) returns (CodSeguimiento) {}
     rpc SolicitaSeguimiento(CodSeguimiento) returns (Estado) {}
 }
