@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"time"
 
 	serviciomensajeria "github.com/ClaudiaHazard/Tarea1/ServicioMensajeria"
 	"golang.org/x/net/context"
@@ -41,9 +42,18 @@ func InformaPaqueteLogistica(conn *grpc.ClientConn) string {
 }
 
 func main() {
-	log.Printf("Respuesta de Logisticadsaasdasd")
-	var conn = IniciaCliente()
-	log.Printf("Respuesta de Logistsdada")
-	InformaPaqueteLogistica(conn)
+	var conn *grpc.ClientConn
+
+	conn, err := grpc.Dial(ipport, grpc.WithInsecure(), grpc.WithBlock())
+
+	if err != nil {
+		log.Fatalf("did not connect: %s", err)
+	}
+	defer conn.Close()
+
+	go InformaPaqueteLogistica(conn)
+	go InformaPaqueteLogistica(conn)
+
+	time.Sleep(10 * time.Second)
 
 }

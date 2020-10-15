@@ -38,6 +38,22 @@ func IniciaServidor() {
 
 //Para usar en local, cambiar ipport por ":"+port
 func main() {
-	IniciaServidor()
+	lis, err := net.Listen("tcp", ipport)
+
+	if err != nil {
+		log.Fatalf("Failed to listen on "+ipport+": %v", err)
+	}
+
+	grpcServer := grpc.NewServer()
+
+	s := serviciomensajeria.Server{}
+
+	fmt.Println("En espera de Informacion paquetes")
+
+	serviciomensajeria.RegisterMensajeriaServiceServer(grpcServer, &s)
+
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Fatalf("Failed to serve gRPC server over "+ipport+": %v", err)
+	}
 
 }
