@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"time"
 
 	serviciomensajeria "github.com/ClaudiaHazard/Tarea1/ServicioMensajeria"
 	"golang.org/x/net/context"
@@ -30,8 +29,8 @@ func IniciaCliente() *grpc.ClientConn {
 
 //InformaPaqueteLogistica Camion informa estado del paquete a Logistica
 func InformaPaqueteLogistica(conn *grpc.ClientConn) string {
-	c := serviciomensajeria.NewInformaEntregaClient(conn)
-	response, err := c.InformaPaquete(context.Background(), &informapaquete.Message{Body: "Hola por parte de Camiones!"})
+	c := serviciomensajeria.NewMensajeriaServiceClient(conn)
+	response, err := c.InformaEntrega(context.Background(), &serviciomensajeria.Message{Body: "Hola por parte de Camiones!"})
 
 	if err != nil {
 		log.Fatalf("Error al llamar InformaPaquete: %s", err)
@@ -42,11 +41,9 @@ func InformaPaqueteLogistica(conn *grpc.ClientConn) string {
 }
 
 func main() {
-
+	log.Printf("Respuesta de Logisticadsaasdasd")
 	var conn = IniciaCliente()
-
-	go InformaPaqueteLogistica(conn)
-	go InformaPaqueteLogistica(conn)
-	time.Sleep(10 * time.Second)
+	log.Printf("Respuesta de Logistsdada")
+	InformaPaqueteLogistica(conn)
 
 }

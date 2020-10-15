@@ -25,7 +25,7 @@ func IniciaServidor() {
 
 	grpcServer := grpc.NewServer()
 
-	s := serviciomensajeria.Server{id: 2}
+	s := serviciomensajeria.Server{}
 
 	fmt.Println("En espera de Informacion paquetes")
 
