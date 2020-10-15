@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	serviciocamiones "github.com/ClaudiaHazard/Tarea1/ServiciosServidor/ServicioCamiones"
+	serviciomensajeria "github.com/ClaudiaHazard/Tarea1/ServicioMensajeria"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -30,7 +30,7 @@ func IniciaCliente() *grpc.ClientConn {
 
 //InformaPaqueteLogistica Camion informa estado del paquete a Logistica
 func InformaPaqueteLogistica(conn *grpc.ClientConn) string {
-	c := serviciocamiones.NewInformaPaqueteServiceClient(conn)
+	c := serviciomensajeria.NewInformaEntregaClient(conn)
 	response, err := c.InformaPaquete(context.Background(), &informapaquete.Message{Body: "Hola por parte de Camiones!"})
 
 	if err != nil {
