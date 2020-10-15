@@ -30,7 +30,7 @@ func IniciaServidor() {
 
 	grpcServer := grpc.NewServer()
 
-	sCamion := informapaquete.Server{1}
+	sCamion := informapaquete.Server{id: 2}
 	sCliente := enviaorden.Server{}
 
 	fmt.Println("En espera de Informacion paquetes")
