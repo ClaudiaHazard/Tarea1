@@ -1,12 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"net"
 	"time"
 
-	enviainstrucciones "github.com/ClaudiaHazard/Tarea1/Camiones/EnviaInstrucciones"
 	informapaquete "github.com/ClaudiaHazard/Tarea1/Logistica/InformaPaquete"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -14,37 +11,15 @@ import (
 
 //IP local 10.6.40.161
 const (
-	//ipportLogistica = "10.6.40.162:50051"
-	ipportLogistica = ":50051"
-	//ipportCamiones = "10.6.40.161:50051"
-	ipportCamiones = ":50051"
+	//ipport = "10.6.40.162:50051"
+	ipport = ":50051"
 )
-
-//IniciaServidor inicia servidor listen para los servicios correspondientes
-func IniciaServidor() {
-	lis, err := net.Listen("tcp", ipportCamiones)
-
-	if err != nil {
-		log.Fatalf("Failed to listen on "+ipportCamiones+": %v", err)
-	}
-
-	grpcServer := grpc.NewServer()
-
-	sLogistica := enviainstrucciones.Server{}
-
-	fmt.Println("En espera de instrucciones de reparto")
-	enviainstrucciones.RegisterEnviaInstruccionesServiceServer(grpcServer, &sLogistica)
-
-	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("Failed to serve gRPC server over "+ipportCamiones+": %v", err)
-	}
-}
 
 //IniciaCliente inicia conexion cliente
 func IniciaCliente() *grpc.ClientConn {
 	var conn *grpc.ClientConn
 
-	conn, err := grpc.Dial(ipportLogistica, grpc.WithInsecure(), grpc.WithBlock())
+	conn, err := grpc.Dial(ipport, grpc.WithInsecure(), grpc.WithBlock())
 
 	if err != nil {
 		log.Fatalf("did not connect: %s", err)
@@ -68,11 +43,10 @@ func InformaPaqueteLogistica(conn *grpc.ClientConn) string {
 
 func main() {
 
-	time.Sleep(10 * time.Second)
-
 	var conn = IniciaCliente()
 
 	go InformaPaqueteLogistica(conn)
 	go InformaPaqueteLogistica(conn)
+	time.Sleep(10 * time.Second)
 
 }
