@@ -5,8 +5,7 @@ import (
 	"log"
 	"net"
 
-	enviaorden "github.com/ClaudiaHazard/Tarea1/Logistica/EnviaOrden"
-	informapaquete "github.com/ClaudiaHazard/Tarea1/Logistica/InformaPaquete"
+	serviciosservidor "github.com/ClaudiaHazard/Tarea1/ServiciosServidor"
 	"google.golang.org/grpc"
 )
 
@@ -26,13 +25,13 @@ func IniciaServidor() {
 
 	grpcServer := grpc.NewServer()
 
-	sCamion := informapaquete.Server{}
-	sCliente := enviaorden.Server{}
+	sCamion := serviciosservidor.RegisterCamionesServiceServer.Server{}
+	//sCliente := enviaorden.Server{}
 
 	fmt.Println("En espera de Informacion paquetes")
-	informapaquete.RegisterInformaPaqueteServiceServer(grpcServer, &sCamion)
-	fmt.Println("En espera de nuevas ordenes de cliente")
-	enviaorden.RegisterEnviaOrdenServiceServer(grpcServer, &sCliente)
+	serviciosservidor.RegisterCamionesServiceServer(grpcServer, &sCamion)
+	//fmt.Println("En espera de nuevas ordenes de cliente")
+	//enviaorden.RegisterEnviaOrdenServiceServer(grpcServer, &sCliente)
 
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve gRPC server over "+ipport+": %v", err)

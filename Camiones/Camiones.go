@@ -4,7 +4,6 @@ import (
 	"log"
 	"time"
 
-	informapaquete "github.com/ClaudiaHazard/Tarea1/Logistica/InformaPaquete"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )

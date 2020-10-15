@@ -1,10 +1,24 @@
 syntax = "proto3";
-package serviciosservidor;
+package serviciomensajeria;
 
-option go_package = "github.com/example/path/gen;serviciosservidor";
+option go_package = "github.com/example/path/gen;serviciomensajeria";
 
 message Message {
     string body = 1;
+}
+
+message Paquete {
+    int32 id = 1;
+    int32 CodigoSeguimiento = 2;
+    string tipo = 3;
+    int32 valor = 4;
+    int32 intentos = 5;
+    string estado =6;
+}
+
+message InformacionPaquete{
+    int32 CodigoSeguimiento = 1;
+    string estado = 2;
 }
 
 message CodSeguimiento {
@@ -24,27 +38,10 @@ message Orden {
     string destino = 6; 
 }
 
-message Paquete {
-    int32 id = 1;
-    int32 CodigoSeguimiento = 2;
-    string tipo = 3;
-    int32 valor = 4;
-    int32 intentos = 5;
-    string estado =6;
-}
-
-message InformacionPaquete{
-    int32 CodigoSeguimiento = 1;
-    string estado = 2;
-}
-
-service CamionesService{
+service MensajeriaService{
     rpc EntregaPosicion(InformacionPaquete) returns (Message) {}
     rpc InformaEntrega(Message) returns (Message) {}
     rpc RecibeInstrucciones(Message) returns (Paquete) {}
-}
-
-service ClienteService{
     rpc RealizaOrden(Orden) returns (CodSeguimiento) {}
     rpc SolicitaSeguimiento(CodSeguimiento) returns (Estado) {}
 }

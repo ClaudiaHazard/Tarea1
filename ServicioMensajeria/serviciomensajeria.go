@@ -1,4 +1,4 @@
-package serviciosservidor
+package serviciomensajeria
 
 import (
 	"log"
