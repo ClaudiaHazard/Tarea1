@@ -31,7 +31,8 @@ func IniciaCliente() *grpc.ClientConn {
 //InformaPaqueteLogistica Camion informa estado del paquete a Logistica
 func InformaPaqueteLogistica(conn *grpc.ClientConn) string {
 	c := serviciomensajeria.NewMensajeriaServiceClient(conn)
-	response, err := c.InformaEntrega(context.Background(), &serviciomensajeria.Message{Body: "Hola por parte de Camiones!"})
+	ctx := context.Background()
+	response, err := c.InformaEntrega(context.WithValue(ctx, "1", "2"), &serviciomensajeria.Message{Body: "Hola por parte de Camiones!"})
 
 	if err != nil {
 		log.Fatalf("Error al llamar InformaPaquete: %s", err)

@@ -39,7 +39,7 @@ func IniciaServidor() {
 
 //Server simple
 type Server struct {
-	//id int
+	id int
 }
 
 //EntregaPosicion recibe paquete de Camiones en Logistica
@@ -50,8 +50,8 @@ func (s *Server) EntregaPosicion(ctx context.Context, in *sm.InformacionPaquete)
 
 //InformaEntrega recibe paquete de Camiones en Logistica
 func (s *Server) InformaEntrega(ctx context.Context, in *sm.Message) (*sm.Message, error) {
-	log.Printf("Receive message body from client: %s", in.Body)
-	return &sm.Message{Body: "Hola desde Logistica!"}, nil
+	log.Printf("Receive message body from client: %s yep %d", in.Body, s.id)
+	return &sm.Message{Body: "Hola desde Logistica! camion numero" + ctx.Value("1")}, nil
 }
 
 //RecibeInstrucciones recibe paquete de Camiones en Logistica
@@ -68,7 +68,7 @@ func (s *Server) RealizaOrden(ctx context.Context, in *sm.Orden) (*sm.CodSeguimi
 
 //SolicitaSeguimiento recibe paquete de Camiones en Logistica
 func (s *Server) SolicitaSeguimiento(ctx context.Context, in *sm.CodSeguimiento) (*sm.Estado, error) {
-	log.Printf("Receive message body from client: %d", in.CodigoSeguimiento)
+	log.Printf("Receive message body from client: %d y %d", in.CodigoSeguimiento, s.id)
 	return &sm.Estado{Estado: "Bonito"}, nil
 }
 
@@ -82,7 +82,7 @@ func main() {
 
 	grpcServer := grpc.NewServer()
 
-	s := Server{}
+	s := Server{1}
 
 	fmt.Println("En espera de Informacion paquetes")
 
