@@ -14,6 +14,8 @@ message Paquete {
     int32 valor = 4;
     int32 intentos = 5;
     string estado =6;
+    string origen =7;
+    string destino=8;
 }
 
 message InformacionPaquete{

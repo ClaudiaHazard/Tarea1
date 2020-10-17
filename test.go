@@ -1,23 +1,6 @@
 package main
 
-import (
-	"log"
-	"math/rand"
-
-	"sync"
-
-	sm "github.com/ClaudiaHazard/Tarea1/ServicioMensajeria"
-	"golang.org/x/net/context"
-	"google.golang.org/grpc"
-)
-
-var wg sync.WaitGroup
-
-//IP local 10.6.40.161
-const (
-	//ipport = "10.6.40.162:50051"
-	ipport = ":50051"
-)
+import "math/rand"
 
 //Paquete Estructura del paquete a recibir.Tipo: retail, normal, prioritario. Estado: En bodega, en camino, recibido, no recibido.
 type Paquete struct {
@@ -117,46 +100,6 @@ func CamionEntregaPaquetes(cam *Camion) {
 	}
 }
 
-//IniciaCliente inicia conexion cliente
-func IniciaCliente() *grpc.ClientConn {
-	var conn *grpc.ClientConn
-
-	conn, err := grpc.Dial(ipport, grpc.WithInsecure(), grpc.WithBlock())
-
-	if err != nil {
-		log.Fatalf("did not connect: %s", err)
-	}
-	defer conn.Close()
-	return conn
-}
-
-//InformaPaqueteLogistica Camion informa estado del paquete a Logistica
-func InformaPaqueteLogistica(conn *grpc.ClientConn) string {
-	c := sm.NewMensajeriaServiceClient(conn)
-	ctx := context.Background()
-	response, err := c.InformaEntrega(ctx, &sm.Message{Body: "Hola por parte de Camiones!"})
-	if err != nil {
-		log.Fatalf("Error al llamar InformaPaquete: %s", err)
-	}
-
-	log.Printf("Respuesta de Logistica: %s", response.Body)
-	return response.Body
-}
-
 func main() {
-	var conn *grpc.ClientConn
-
-	conn, err := grpc.Dial(ipport, grpc.WithInsecure(), grpc.WithBlock())
-
-	if err != nil {
-		log.Fatalf("did not connect: %s", err)
-	}
-
-	//Camion1 := make(chan int)
-	wg.Add(1)
-	//log.Printf("Respuesta de Logistica: %d", Camion1)
-	go InformaPaqueteLogistica(conn)
-	go InformaPaqueteLogistica(conn)
-	go InformaPaqueteLogistica(conn)
 
 }

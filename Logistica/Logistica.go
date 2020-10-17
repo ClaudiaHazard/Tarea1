@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strconv"
 
 	sm "github.com/ClaudiaHazard/Tarea1/ServicioMensajeria"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 
@@ -17,42 +17,27 @@ const (
 	ipport = ":50051"
 )
 
-//IniciaServidor inicia servidor listen para los servicios correspondientes
-func IniciaServidor() {
-	lis, err := net.Listen("tcp", ipport)
-
-	if err != nil {
-		log.Fatalf("Failed to listen on "+ipport+": %v", err)
-	}
-
-	grpcServer := grpc.NewServer()
-
-	s := Server{}
-
-	fmt.Println("En espera de Informacion paquetes")
-
-	sm.RegisterMensajeriaServiceServer(grpcServer, &s)
-
-	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("Failed to serve gRPC server over "+ipport+": %v", err)
-	}
-}
-
 //Server simple
 type Server struct {
 	id int
 }
 
+//CamionKey key del camion
+type CamionKey struct {
+	s string
+}
+
 //EntregaPosicion recibe paquete de Camiones en Logistica
 func (s *Server) EntregaPosicion(ctx context.Context, in *sm.InformacionPaquete) (*sm.Message, error) {
 	log.Printf("Receive message body from client: %d", in.CodigoSeguimiento)
+	s = ctx.Value
 	return &sm.Message{Body: "Hola desde Logistica!"}, nil
 }
 
 //InformaEntrega recibe paquete de Camiones en Logistica
 func (s *Server) InformaEntrega(ctx context.Context, in *sm.Message) (*sm.Message, error) {
 	log.Printf("Receive message body from client: %s yep %d", in.Body, s.id)
-	return &sm.Message{Body: "Hola desde Logistica! camion numero" + ctx.Value("camiones").(Camiones).Get("2")}, nil
+	return &sm.Message{Body: "Hola desde Logistica! camion numero " + strconv.Itoa(s.id)}, nil
 }
 
 //RecibeInstrucciones recibe paquete de Camiones en Logistica
@@ -81,13 +66,21 @@ func main() {
 		log.Fatalf("Failed to listen on "+ipport+": %v", err)
 	}
 
-	grpcServer := grpc.NewServer()
-
 	s := Server{1}
 
-	fmt.Println("En espera de Informacion paquetes")
+	grpcServer := grpc.NewServer()
+
+	fmt.Println("En espera de Informacion paquetes para servidor")
 
 	sm.RegisterMensajeriaServiceServer(grpcServer, &s)
+
+	s = Server{2}
+
+	if s.id == 3 {
+		lis.Close()
+	}
+
+	s = Server{3}
 
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve gRPC server over "+ipport+": %v", err)
