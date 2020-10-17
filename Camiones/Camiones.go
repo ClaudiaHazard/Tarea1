@@ -40,6 +40,12 @@ type Camion struct {
 	paq2       Paquete
 }
 
+//CamionResp para reconocer llamadas de camion en Logistica.
+type CamionResp struct {
+	id   int32
+	tipo string
+}
+
 //EntregaPaquete intenta entregar paquete.
 func EntregaPaquete(paq Paquete) int {
 	c := rand.Float64()
@@ -131,16 +137,25 @@ func IniciaCliente() *grpc.ClientConn {
 }
 
 //InformaPaqueteLogistica Camion informa estado del paquete a Logistica
-func InformaPaqueteLogistica(conn *grpc.ClientConn) string {
+func InformaPaqueteLogistica(conn *grpc.ClientConn, cam Camion) string {
+	defer wg.Done()
 	c := sm.NewMensajeriaServiceClient(conn)
-	ctx := context.Background()
-	response, err := c.InformaEntrega(ctx, &sm.Message{Body: "Hola por parte de Camiones!"})
+	//ctx := context.Background()
+	camionRes := CamionResp{cam.id, cam.tipo}
+	ctxCam := context.WithValue(context.Background(), "CamionResp", camionRes)
+	response, err := c.InformaEntrega(ctxCam, &sm.Message{Body: "Hola por parte de Camiones!"})
 	if err != nil {
 		log.Fatalf("Error al llamar InformaPaquete: %s", err)
 	}
 
 	log.Printf("Respuesta de Logistica: %s", response.Body)
 	return response.Body
+}
+
+func holis(cam *Camion) {
+	defer wg.Done()
+	log.Printf("soy el camions %d\n", cam.id)
+
 }
 
 func main() {
@@ -156,8 +171,18 @@ func main() {
 	c2 := Camion{2, "Retail", true, Paquete{}, Paquete{}}
 	c3 := Camion{3, "Normal", true, Paquete{}, Paquete{}}
 
-	go InformaPaqueteLogistica(conn)
-	go InformaPaqueteLogistica(conn)
-	go InformaPaqueteLogistica(conn)
+	wg.Add(1)
+	go holis(&c1)
+	wg.Add(1)
+	go holis(&c2)
+	wg.Add(1)
+	go holis(&c3)
+	wg.Add(1)
+	go InformaPaqueteLogistica(conn, c1)
+	wg.Add(1)
+	go InformaPaqueteLogistica(conn, c2)
+	wg.Add(1)
+	go InformaPaqueteLogistica(conn, c3)
+	wg.Wait()
 
 }

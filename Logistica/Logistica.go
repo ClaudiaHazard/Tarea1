@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"strconv"
 
 	sm "github.com/ClaudiaHazard/Tarea1/ServicioMensajeria"
 	"google.golang.org/grpc"
@@ -17,16 +16,27 @@ const (
 	ipport = ":50051"
 )
 
-//Server datos locales de Logistica
-type Server struct {
+//CamionResp para reconocer llamadas de camion en Logistica.
+type CamionResp struct {
+	id   int32
+	tipo string
+}
+
+//Logistica datos locales de Logistica
+type Logistica struct {
 	camion         int
 	arrRetail      []sm.Paquete
 	arrPrioritario []sm.Paquete
 	arrNormal      []sm.Paquete
 }
 
+//Server datos
+type Server struct {
+	clienteid string
+}
+
 //AgregaACola agrega paquete a cola correspondiente
-func AgregaACola(p sm.Paquete, s Server) {
+func AgregaACola(p sm.Paquete, s Logistica) {
 	if p.Tipo == "Retail" {
 		s.arrRetail = append(s.arrRetail, p)
 	}
@@ -47,7 +57,7 @@ func BorrarElemento(arr []sm.Paquete, pos int) []sm.Paquete {
 }
 
 //AsignaPaquete asigna paquete al tipo de camion correspondiente.
-func AsignaPaquete(s *Server, tipoCam string, entrPrevRetail bool, paqCargRetail bool) sm.Paquete {
+func AsignaPaquete(s *Logistica, tipoCam string, entrPrevRetail bool, paqCargRetail bool) sm.Paquete {
 	if tipoCam == "Normal" {
 		if len(s.arrPrioritario) != 0 {
 			p := s.arrPrioritario[0]
@@ -86,8 +96,10 @@ func (s *Server) EntregaPosicion(ctx context.Context, in *sm.InformacionPaquete)
 
 //InformaEntrega recibe paquete de Camiones en Logistica
 func (s *Server) InformaEntrega(ctx context.Context, in *sm.Message) (*sm.Message, error) {
-	log.Printf("Receive message body from client: %s yep %d", in.Body, s.camion)
-	return &sm.Message{Body: "Hola desde Logistica! camion numero " + strconv.Itoa(s.camion)}, nil
+	log.Printf("Receive message body from client: %s yep %s", in.Body, s.clienteid)
+	//tipoCam := ctx.Value("CamionResp")
+	//log.Printf(tipoCam)
+	return &sm.Message{Body: "Hola desde Logistica! camion numero " + s.clienteid}, nil
 }
 
 //RecibeInstrucciones recibe paquete de Camiones en Logistica
@@ -104,7 +116,7 @@ func (s *Server) RealizaOrden(ctx context.Context, in *sm.Orden) (*sm.CodSeguimi
 
 //SolicitaSeguimiento recibe paquete de Camiones en Logistica
 func (s *Server) SolicitaSeguimiento(ctx context.Context, in *sm.CodSeguimiento) (*sm.Estado, error) {
-	log.Printf("Receive message body from client: %d y %d", in.CodigoSeguimiento, s.camion)
+	log.Printf("Receive message body from client: %d y %s", in.CodigoSeguimiento, s.clienteid)
 	return &sm.Estado{Estado: "Bonito"}, nil
 }
 
@@ -116,7 +128,7 @@ func main() {
 		log.Fatalf("Failed to listen on "+ipport+": %v", err)
 	}
 
-	s := Server{}
+	s := Server{"Cliente1"}
 
 	grpcServer := grpc.NewServer()
 
@@ -125,10 +137,6 @@ func main() {
 	sm.RegisterMensajeriaServiceServer(grpcServer, &s)
 
 	s = Server{}
-
-	if s.camion == 3 {
-		lis.Close()
-	}
 
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve gRPC server over "+ipport+": %v", err)
