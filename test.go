@@ -1,6 +1,21 @@
 package main
 
-import "math/rand"
+import (
+	"log"
+	"math/rand"
+	"sync"
+	"time"
+)
+
+var wg sync.WaitGroup
+
+//Server Struct que contiene los valores del server
+type Server struct {
+	camion         int
+	arrRetail      []Paquete
+	arrPrioritario []Paquete
+	arrNormal      []Paquete
+}
 
 //Paquete Estructura del paquete a recibir.Tipo: retail, normal, prioritario. Estado: En bodega, en camino, recibido, no recibido.
 type Paquete struct {
@@ -21,6 +36,58 @@ type Camion struct {
 	disponible bool
 	paq1       Paquete
 	paq2       Paquete
+}
+
+//AgregaACola agrega paquete a cola correspondiente
+func AgregaACola(p Paquete, s Server) {
+	if p.tipo == "Retail" {
+		s.arrRetail = append(s.arrRetail, p)
+	}
+	if p.tipo == "Prioritario" {
+		s.arrPrioritario = append(s.arrPrioritario, p)
+	}
+	if p.tipo == "Retail" {
+		s.arrNormal = append(s.arrNormal, p)
+	}
+}
+
+//BorrarElemento borra el elemento en la posicion pos.
+func BorrarElemento(arr []Paquete, pos int) []Paquete {
+	copy(arr[pos:], arr[pos+1:]) // Shift a[i+1:] left one index.
+	arr[len(arr)-1] = Paquete{}  // Erase last element (write zero value).
+	arr = arr[:len(arr)-1]
+	return arr
+}
+
+//AsignaPaquete asigna paquete al tipo de camion correspondiente.
+func AsignaPaquete(s *Server, tipoCam string, entrPrevRetail bool, paqCargRetail bool) Paquete {
+	if tipoCam == "Normal" {
+		if len(s.arrPrioritario) != 0 {
+			p := s.arrPrioritario[0]
+			s.arrPrioritario = BorrarElemento(s.arrPrioritario, 0)
+			return p
+		} else if len(s.arrNormal) != 0 {
+			p := s.arrNormal[0]
+			s.arrNormal = BorrarElemento(s.arrNormal, 0)
+			return p
+		} else {
+			return Paquete{}
+		}
+	}
+	if tipoCam == "Retail" {
+		if len(s.arrRetail) != 0 {
+			p := s.arrRetail[0]
+			s.arrRetail = BorrarElemento(s.arrRetail, 0)
+			return p
+		} else if len(s.arrPrioritario) != 0 && entrPrevRetail && paqCargRetail {
+			p := s.arrPrioritario[0]
+			s.arrPrioritario = BorrarElemento(s.arrPrioritario, 0)
+			return p
+		} else {
+			return Paquete{}
+		}
+	}
+	return Paquete{}
 }
 
 //EntregaPaquete intenta entregar paquete.
@@ -100,6 +167,41 @@ func CamionEntregaPaquetes(cam *Camion) {
 	}
 }
 
+func holis(cam *Camion) {
+	defer wg.Done()
+	log.Printf("soy el camions %d\n", cam.id)
+
+}
+
+func holis2(cam *Camion) {
+	defer wg.Done()
+	log.Printf("soy el camions %d\n", cam.id)
+	time.Sleep(2 * time.Second)
+	log.Printf("soy el camions %d\n", cam.id)
+}
+
+func inicializa(cam *Camion) {
+	defer wg.Done()
+	wg.Add(1)
+	go holis(cam)
+	wg.Add(1)
+	go holis2(cam)
+
+}
+
 func main() {
+
+	c1 := Camion{1, "Retail", true, Paquete{}, Paquete{}}
+	c2 := Camion{2, "Retail", true, Paquete{}, Paquete{}}
+	c3 := Camion{3, "Normal", true, Paquete{}, Paquete{}}
+
+	wg.Add(1)
+	go inicializa(&c1)
+	wg.Add(1)
+	go inicializa(&c2)
+	wg.Add(1)
+	go inicializa(&c3)
+
+	wg.Wait()
 
 }

@@ -152,9 +152,10 @@ func main() {
 		log.Fatalf("did not connect: %s", err)
 	}
 
-	//Camion1 := make(chan int)
-	wg.Add(1)
-	//log.Printf("Respuesta de Logistica: %d", Camion1)
+	c1 := Camion{1, "Retail", true, Paquete{}, Paquete{}}
+	c2 := Camion{2, "Retail", true, Paquete{}, Paquete{}}
+	c3 := Camion{3, "Normal", true, Paquete{}, Paquete{}}
+
 	go InformaPaqueteLogistica(conn)
 	go InformaPaqueteLogistica(conn)
 	go InformaPaqueteLogistica(conn)

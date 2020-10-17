@@ -17,27 +17,77 @@ const (
 	ipport = ":50051"
 )
 
-//Server simple
+//Server datos locales de Logistica
 type Server struct {
-	id int
+	camion         int
+	arrRetail      []sm.Paquete
+	arrPrioritario []sm.Paquete
+	arrNormal      []sm.Paquete
 }
 
-//CamionKey key del camion
-type CamionKey struct {
-	s string
+//AgregaACola agrega paquete a cola correspondiente
+func AgregaACola(p sm.Paquete, s Server) {
+	if p.Tipo == "Retail" {
+		s.arrRetail = append(s.arrRetail, p)
+	}
+	if p.Tipo == "Prioritario" {
+		s.arrPrioritario = append(s.arrPrioritario, p)
+	}
+	if p.Tipo == "Retail" {
+		s.arrNormal = append(s.arrNormal, p)
+	}
+}
+
+//BorrarElemento borra el elemento en la posicion pos.
+func BorrarElemento(arr []sm.Paquete, pos int) []sm.Paquete {
+	copy(arr[pos:], arr[pos+1:])   // Shift a[i+1:] left one index.
+	arr[len(arr)-1] = sm.Paquete{} // Erase last element (write zero value).
+	arr = arr[:len(arr)-1]
+	return arr
+}
+
+//AsignaPaquete asigna paquete al tipo de camion correspondiente.
+func AsignaPaquete(s *Server, tipoCam string, entrPrevRetail bool, paqCargRetail bool) sm.Paquete {
+	if tipoCam == "Normal" {
+		if len(s.arrPrioritario) != 0 {
+			p := s.arrPrioritario[0]
+			s.arrPrioritario = BorrarElemento(s.arrPrioritario, 0)
+			return p
+		} else if len(s.arrNormal) != 0 {
+			p := s.arrNormal[0]
+			s.arrNormal = BorrarElemento(s.arrNormal, 0)
+			return p
+		} else {
+			return sm.Paquete{}
+		}
+	}
+	if tipoCam == "Retail" {
+		if len(s.arrRetail) != 0 {
+			p := s.arrRetail[0]
+			s.arrRetail = BorrarElemento(s.arrRetail, 0)
+			return p
+		} else if len(s.arrPrioritario) != 0 && entrPrevRetail && paqCargRetail {
+			p := s.arrPrioritario[0]
+			s.arrPrioritario = BorrarElemento(s.arrPrioritario, 0)
+			return p
+		} else {
+			return sm.Paquete{}
+		}
+	}
+	return sm.Paquete{}
 }
 
 //EntregaPosicion recibe paquete de Camiones en Logistica
 func (s *Server) EntregaPosicion(ctx context.Context, in *sm.InformacionPaquete) (*sm.Message, error) {
 	log.Printf("Receive message body from client: %d", in.CodigoSeguimiento)
-	s = ctx.Value
+	//s = ctx.Value
 	return &sm.Message{Body: "Hola desde Logistica!"}, nil
 }
 
 //InformaEntrega recibe paquete de Camiones en Logistica
 func (s *Server) InformaEntrega(ctx context.Context, in *sm.Message) (*sm.Message, error) {
-	log.Printf("Receive message body from client: %s yep %d", in.Body, s.id)
-	return &sm.Message{Body: "Hola desde Logistica! camion numero " + strconv.Itoa(s.id)}, nil
+	log.Printf("Receive message body from client: %s yep %d", in.Body, s.camion)
+	return &sm.Message{Body: "Hola desde Logistica! camion numero " + strconv.Itoa(s.camion)}, nil
 }
 
 //RecibeInstrucciones recibe paquete de Camiones en Logistica
@@ -54,7 +104,7 @@ func (s *Server) RealizaOrden(ctx context.Context, in *sm.Orden) (*sm.CodSeguimi
 
 //SolicitaSeguimiento recibe paquete de Camiones en Logistica
 func (s *Server) SolicitaSeguimiento(ctx context.Context, in *sm.CodSeguimiento) (*sm.Estado, error) {
-	log.Printf("Receive message body from client: %d y %d", in.CodigoSeguimiento, s.id)
+	log.Printf("Receive message body from client: %d y %d", in.CodigoSeguimiento, s.camion)
 	return &sm.Estado{Estado: "Bonito"}, nil
 }
 
@@ -66,7 +116,7 @@ func main() {
 		log.Fatalf("Failed to listen on "+ipport+": %v", err)
 	}
 
-	s := Server{1}
+	s := Server{}
 
 	grpcServer := grpc.NewServer()
 
@@ -74,13 +124,11 @@ func main() {
 
 	sm.RegisterMensajeriaServiceServer(grpcServer, &s)
 
-	s = Server{2}
+	s = Server{}
 
-	if s.id == 3 {
+	if s.camion == 3 {
 		lis.Close()
 	}
-
-	s = Server{3}
 
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve gRPC server over "+ipport+": %v", err)
