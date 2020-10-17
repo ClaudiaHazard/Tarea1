@@ -18,8 +18,12 @@ message Paquete {
     string destino=8;
 }
 
+message InformePaquetes{
+    repeated Paquete paquetes = 1;
+}
+
 message InformacionPaquete{
-    int32 CodigoSeguimiento = 1;
+    int32 idpaquete = 1;
     string estado = 2;
 }
 
@@ -40,11 +44,18 @@ message Orden {
     string destino = 6; 
 }
 
+message DisponibleCamion{
+    int32 id = 1;
+    string tipo =2;
+    bool entrPrevRetail =3;
+    bool paqCargRetail =4;
+}
+
 service MensajeriaService{
     //Camion
     rpc EntregaPosicion(InformacionPaquete) returns (Message) {}
-    rpc InformaEntrega(Message) returns (Message) {}
-    rpc RecibeInstrucciones(Message) returns (Paquete) {}
+    rpc InformaEntrega(InformePaquetes) returns (Message) {}
+    rpc RecibeInstrucciones(DisponibleCamion) returns (Paquete) {}
     //Cliente
     rpc RealizaOrden(Orden) returns (CodSeguimiento) {}
     rpc SolicitaSeguimiento(CodSeguimiento) returns (Estado) {}

@@ -10,7 +10,7 @@ import (
 	"os"
 	"time"
 
-	enviaorden "github.com/ClaudiaHazard/Tarea1/Logistica/EnviaOrden"
+	sm "github.com/ClaudiaHazard/Tarea1/ServicioMensajeria"
 	"google.golang.org/grpc"
 )
 
@@ -23,9 +23,9 @@ const (
 //EnviaOrdenCliente de Cliente a Logistica
 func EnviaOrdenCliente(conn *grpc.ClientConn) string {
 
-	c := enviaorden.NewEnviaOrdenServiceClient(conn)
+	c := sm.NewEnviaOrdenServiceClient(conn)
 
-	response, err2 := c.EnviaOrden(context.Background(), &enviaorden.Message{Body: "Hola por parte de Cliente!"})
+	response, err2 := c.EnviaOrden(context.Background(), &sm.Orden{id: })
 
 	if err2 != nil {
 		log.Fatalf("Error al llamar EnviaOrden: %s", err2)

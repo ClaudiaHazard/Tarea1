@@ -97,8 +97,8 @@ func (s *Server) EntregaPosicion(ctx context.Context, in *sm.InformacionPaquete)
 //InformaEntrega recibe paquete de Camiones en Logistica
 func (s *Server) InformaEntrega(ctx context.Context, in *sm.Message) (*sm.Message, error) {
 	log.Printf("Receive message body from client: %s yep %s", in.Body, s.clienteid)
-	//tipoCam := ctx.Value("CamionResp")
-	//log.Printf(tipoCam)
+	tipoCam := ctx.Value("tipo")
+	log.Printf(tipoCam.(string))
 	return &sm.Message{Body: "Hola desde Logistica! camion numero " + s.clienteid}, nil
 }
 

@@ -140,10 +140,8 @@ func IniciaCliente() *grpc.ClientConn {
 func InformaPaqueteLogistica(conn *grpc.ClientConn, cam Camion) string {
 	defer wg.Done()
 	c := sm.NewMensajeriaServiceClient(conn)
-	//ctx := context.Background()
-	camionRes := CamionResp{cam.id, cam.tipo}
-	ctxCam := context.WithValue(context.Background(), "CamionResp", camionRes)
-	response, err := c.InformaEntrega(ctxCam, &sm.Message{Body: "Hola por parte de Camiones!"})
+	ctx := context.Background()
+	response, err := c.InformaEntrega(ctx, &sm.Message{Body: "Hola por parte de Camiones!", cam.tipo})
 	if err != nil {
 		log.Fatalf("Error al llamar InformaPaquete: %s", err)
 	}
