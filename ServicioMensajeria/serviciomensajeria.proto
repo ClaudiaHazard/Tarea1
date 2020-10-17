@@ -36,7 +36,7 @@ message Estado {
 }
 
 message Orden {
-    int32 id = 1;
+    string id = 1;
     string tipo = 2;
     string nombre = 3;
     int32 valor = 4;
