@@ -204,4 +204,8 @@ func main() {
 
 	wg.Wait()
 
+	m := make(map[int]string)
+	m[123] = "En proceso"
+	log.Printf("Estado del paquete con codigo %s\n", m[123])
+
 }

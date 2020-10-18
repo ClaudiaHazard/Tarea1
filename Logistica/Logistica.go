@@ -22,12 +22,6 @@ type CamionResp struct {
 	tipo string
 }
 
-var clienteid string
-var camion int
-var arrRetail []*sm.Paquete
-var arrPrioritario []*sm.Paquete
-var arrNormal []*sm.Paquete
-
 //CodSeg Codigo de seguimiento que se incrementa en uno cada vez que se genera un nuevo codigo
 var CodSeg int32
 
@@ -37,6 +31,7 @@ type Server struct {
 	arrRetail      []*sm.Paquete
 	arrPrioritario []*sm.Paquete
 	arrNormal      []*sm.Paquete
+	Seguimiento    map[int]string
 }
 
 //AgregaACola agrega paquete a cola correspondiente
@@ -94,8 +89,7 @@ func AsignaPaquete(s *Server, tipoCam string, entrPrevRetail bool, paqCargRetail
 
 //EntregaPosicion Entrega actualizacion de paquete
 func (s *Server) EntregaPosicion(ctx context.Context, in *sm.InformacionPaquete) (*sm.Message, error) {
-	log.Printf("Receive message body from client: %d", in.Idpaquete)
-	//s = ctx.Value
+	log.Printf("Receive message body from client: %s", in.Idpaquete)
 	return &sm.Message{Body: "Hola desde Logistica!"}, nil
 }
 
@@ -146,9 +140,9 @@ func main() {
 		log.Fatalf("Failed to listen on "+ipport+": %v", err)
 	}
 
-	s := Server{"1", []*sm.Paquete{}, []*sm.Paquete{}, []*sm.Paquete{}}
+	s := Server{"1", []*sm.Paquete{}, []*sm.Paquete{}, []*sm.Paquete{}, make(map[int]string)}
 
-	CodSeg = 0
+	CodSeg = 10000
 
 	paq := &sm.Paquete{Id: "1", CodigoSeguimiento: 1, Tipo: "Retail", Valor: 10, Intentos: 0, Estado: "En bodega", Origen: "Origen A", Destino: "Destino A", Nombre: "Bicicleta"}
 

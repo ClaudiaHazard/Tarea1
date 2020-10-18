@@ -24,7 +24,7 @@ message InformePaquetes{
 }
 
 message InformacionPaquete{
-    string idpaquete = 1;
+    int32 CodigoSeguimiento = 1;
     string estado = 2;
 }
 
