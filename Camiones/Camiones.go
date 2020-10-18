@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"math/rand"
 	"reflect"
@@ -146,7 +147,7 @@ func IniciaCliente() *grpc.ClientConn {
 }
 
 //InformaPaqueteLogistica Camion informa entrega de la orden a Logistica
-func InformaPaqueteLogistica(conn *grpc.ClientConn, cam Camion) string {
+func InformaPaqueteLogistica(conn *grpc.ClientConn, cam *Camion) string {
 	defer wg.Done()
 	c := sm.NewMensajeriaServiceClient(conn)
 	ctx := context.Background()
@@ -181,11 +182,14 @@ func EntregaPosicionEntregaActual(conn *grpc.ClientConn, paq *sm.Paquete) string
 }
 
 //CamionDisponible Informa que el camion se encuentra disponible para cargar paquetes, ya sea tiene o no 1 paquete.
-func CamionDisponible(conn *grpc.ClientConn, cam Camion) *sm.Paquete {
+func CamionDisponible(conn *grpc.ClientConn, cam *Camion) *sm.Paquete {
 	defer wg.Done()
 	c := sm.NewMensajeriaServiceClient(conn)
 	ctx := context.Background()
 	response, err := c.RecibeInstrucciones(ctx, &sm.DisponibleCamion{Id: cam.id, Tipo: cam.tipo, EntrPrevRetail: cam.EntrPrevRetail, PaqCargRetail: cam.PaqCargRetail})
+	if !cam.PaqCargRetail && cam.tipo == "Retail" && cam.PaqCargRetail == false {
+		cam.PaqCargRetail = true
+	}
 	if err != nil {
 		log.Fatalf("Error al llamar EntregaPosicion: %s", err)
 	}
@@ -198,16 +202,15 @@ func holis(cam *Camion) {
 
 }
 
-
 //CamionEspera camión que no tiene paquetes recibe un paquete, y luego espera a poder cargar uno
-func CamionEspera (cam *Camion, conn *grpc.ClientConn, ti int) {
-	cam.paq1=CamionDisponible(conn,cam)
+func CamionEspera(cam *Camion, conn *grpc.ClientConn, ti int) {
+	cam.paq1 = CamionDisponible(conn, cam)
 	//como saber a donde ir en que caso? porque disponible sólo ifnorma que está disponible
 
 	//ejecutar disponible y esperar por resp una cierta cantidad de tiempo, si no se cumple, terminar
-	for {
-		cam.paq2=
-	}
+	//for {
+	//	cam.paq2=
+	//}
 
 }
 
@@ -234,11 +237,12 @@ func main() {
 	wg.Add(1)
 	go holis(&c3)
 	wg.Add(1)
-	go InformaPaqueteLogistica(conn, c1)
+	c1.paq1 = CamionDisponible(conn, &c1)
 	wg.Add(1)
-	go InformaPaqueteLogistica(conn, c2)
+	go InformaPaqueteLogistica(conn, &c2)
 	wg.Add(1)
-	go InformaPaqueteLogistica(conn, c3)
+	log.Printf("Receive message body from client: %s", c1.paq1.Estado)
+	go InformaPaqueteLogistica(conn, &c3)
 	wg.Wait()
 
 }

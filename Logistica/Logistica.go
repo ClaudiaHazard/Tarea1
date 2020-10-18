@@ -22,26 +22,26 @@ type CamionResp struct {
 	tipo string
 }
 
-//Logistica datos locales de Logistica
-type Logistica struct {
-	camion         int
-	arrRetail      []sm.Paquete
-	arrPrioritario []sm.Paquete
-	arrNormal      []sm.Paquete
-	clienteid      string
-}
+var clienteid string
+var camion int
+var arrRetail []*sm.Paquete
+var arrPrioritario []*sm.Paquete
+var arrNormal []*sm.Paquete
+
+//CodSeg Codigo de seguimiento que se incrementa en uno cada vez que se genera un nuevo codigo
+var CodSeg int32
 
 //Server datos
 type Server struct {
 	clienteid      string
-	camion         int
-	arrRetail      []sm.Paquete
-	arrPrioritario []sm.Paquete
-	arrNormal      []sm.Paquete
+	arrRetail      []*sm.Paquete
+	arrPrioritario []*sm.Paquete
+	arrNormal      []*sm.Paquete
 }
 
 //AgregaACola agrega paquete a cola correspondiente
-func AgregaACola(p sm.Paquete, s Logistica) {
+func AgregaACola(p *sm.Paquete, s *Server) {
+
 	if p.Tipo == "Retail" {
 		s.arrRetail = append(s.arrRetail, p)
 	}
@@ -54,15 +54,15 @@ func AgregaACola(p sm.Paquete, s Logistica) {
 }
 
 //BorrarElemento borra el elemento en la posicion pos.
-func BorrarElemento(arr []sm.Paquete, pos int) []sm.Paquete {
-	copy(arr[pos:], arr[pos+1:])   // Shift a[i+1:] left one index.
-	arr[len(arr)-1] = sm.Paquete{} // Erase last element (write zero value).
+func BorrarElemento(arr []*sm.Paquete, pos int) []*sm.Paquete {
+	copy(arr[pos:], arr[pos+1:])    // Shift a[i+1:] left one index.
+	arr[len(arr)-1] = &sm.Paquete{} // Erase last element (write zero value).
 	arr = arr[:len(arr)-1]
 	return arr
 }
 
 //AsignaPaquete asigna paquete al tipo de camion correspondiente.
-func AsignaPaquete(s *Logistica, tipoCam string, entrPrevRetail bool, paqCargRetail bool) sm.Paquete {
+func AsignaPaquete(s *Server, tipoCam string, entrPrevRetail bool, paqCargRetail bool) *sm.Paquete {
 	if tipoCam == "Normal" {
 		if len(s.arrPrioritario) != 0 {
 			p := s.arrPrioritario[0]
@@ -73,7 +73,7 @@ func AsignaPaquete(s *Logistica, tipoCam string, entrPrevRetail bool, paqCargRet
 			s.arrNormal = BorrarElemento(s.arrNormal, 0)
 			return p
 		} else {
-			return sm.Paquete{}
+			return &sm.Paquete{}
 		}
 	}
 	if tipoCam == "Retail" {
@@ -86,10 +86,10 @@ func AsignaPaquete(s *Logistica, tipoCam string, entrPrevRetail bool, paqCargRet
 			s.arrPrioritario = BorrarElemento(s.arrPrioritario, 0)
 			return p
 		} else {
-			return sm.Paquete{}
+			return &sm.Paquete{}
 		}
 	}
-	return sm.Paquete{}
+	return &sm.Paquete{}
 }
 
 //EntregaPosicion Entrega actualizacion de paquete
@@ -102,15 +102,14 @@ func (s *Server) EntregaPosicion(ctx context.Context, in *sm.InformacionPaquete)
 //InformaEntrega Informaque camion termino orden
 func (s *Server) InformaEntrega(ctx context.Context, in *sm.InformePaquetes) (*sm.Message, error) {
 	log.Printf("Receive message body from client: yep")
-	tipoCam := ctx.Value("tipo")
-	log.Printf(tipoCam.(string))
 	return &sm.Message{Body: "Hola desde Logistica! camion numero " + s.clienteid}, nil
 }
 
 //RecibeInstrucciones Camion avisa que esta disponible y se le envia paquete
 func (s *Server) RecibeInstrucciones(ctx context.Context, in *sm.DisponibleCamion) (*sm.Paquete, error) {
-	log.Printf("Receive message body from client: %d", in.Id)
-	return &sm.Paquete{}, nil
+	log.Printf("El Camion %d se encuentra disponible.", in.Id)
+	paq := AsignaPaquete(s, in.Tipo, in.EntrPrevRetail, in.PaqCargRetail)
+	return paq, nil
 }
 
 //RealizaOrden cliente envia orden
@@ -125,6 +124,15 @@ func (s *Server) SolicitaSeguimiento(ctx context.Context, in *sm.CodSeguimiento)
 	return &sm.Estado{Estado: "Bonito"}, nil
 }
 
+//CreaPaquete genera paquete de la orden que entrego el Cliente
+func CreaPaquete(o *sm.Orden) *sm.Paquete {
+	if o.Tipo == "Normal" || o.Tipo == "Prioritario" {
+		CodSeg = CodSeg + 1
+		return &sm.Paquete{Id: o.Id, CodigoSeguimiento: CodSeg, Tipo: o.Tipo, Valor: o.Valor, Intentos: 0, Estado: "En bodega", Origen: o.Origen, Destino: o.Destino}
+	}
+	return &sm.Paquete{Id: o.Id, CodigoSeguimiento: 0, Tipo: o.Tipo, Valor: o.Valor, Intentos: 0, Estado: "En bodega", Origen: o.Origen, Destino: o.Destino}
+}
+
 //Para usar en local, cambiar ipport por ":"+port
 func main() {
 	lis, err := net.Listen("tcp", ipport)
@@ -133,7 +141,13 @@ func main() {
 		log.Fatalf("Failed to listen on "+ipport+": %v", err)
 	}
 
-	s := Server{}
+	s := Server{"1", []*sm.Paquete{}, []*sm.Paquete{}, []*sm.Paquete{}}
+
+	CodSeg = 0
+
+	paq := &sm.Paquete{Id: 1, CodigoSeguimiento: 1, Tipo: "Retail", Valor: 10, Intentos: 0, Estado: "En bodega", Origen: "Origen A", Destino: "Destino A"}
+
+	s.arrRetail = append(s.arrRetail, paq)
 
 	grpcServer := grpc.NewServer()
 

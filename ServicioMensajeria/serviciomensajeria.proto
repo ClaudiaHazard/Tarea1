@@ -16,6 +16,7 @@ message Paquete {
     string estado =6;
     string origen =7;
     string destino=8;
+    string nombre = 9; 
 }
 
 message InformePaquetes{
