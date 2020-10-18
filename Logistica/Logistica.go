@@ -246,6 +246,7 @@ func EditaResigtro(csvFile *os.File, o *sm.Orden, nSeg int32) {
 
 //Para usar en local, cambiar ipport por ":"+port
 func main() {
+	// Escucha las conexiones grpc
 	lis, err := net.Listen("tcp", ipport)
 
 	if err != nil {
@@ -254,22 +255,22 @@ func main() {
 
 	s := Server{"1", []*sm.Paquete{}, []*sm.Paquete{}, []*sm.Paquete{}, make(map[int32]string)}
 
+	//Crea el archivo de registro de logistica
 	CreaRegistro()
 
+	//Crea la conexion RabbitMQ
 	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
 	failOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
 
+	//Inicializa el codigo de seguimiento
 	CodSeg = 10000
-
-	paq := &sm.Paquete{Id: "1", CodigoSeguimiento: 1, Tipo: "Retail", Valor: 10, Intentos: 0, Estado: "En bodega", Origen: "Origen A", Destino: "Destino A", Nombre: "Bicicleta"}
-
-	s.arrRetail = append(s.arrRetail, paq)
 
 	grpcServer := grpc.NewServer()
 
 	fmt.Println("En espera de Informacion paquetes para servidor")
 
+	//Inicia el servicio de mensajeria que contiene las funciones grpc
 	sm.RegisterMensajeriaServiceServer(grpcServer, &s)
 
 	if err := grpcServer.Serve(lis); err != nil {
