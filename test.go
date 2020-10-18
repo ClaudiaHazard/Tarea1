@@ -8,6 +8,7 @@ import (
 )
 
 var wg sync.WaitGroup
+var wg2 sync.WaitGroup
 
 //Server Struct que contiene los valores del server
 type Server struct {
@@ -195,8 +196,11 @@ func main() {
 	c2 := Camion{2, "Retail", true, Paquete{}, Paquete{}}
 	c3 := Camion{3, "Normal", true, Paquete{}, Paquete{}}
 
-	wg.Add(1)
+	wg2.Add(1)
 	go inicializa(&c1)
+	wg2.Wait()
+	log.Printf("Termino w2")
+
 	wg.Add(1)
 	go inicializa(&c2)
 	wg.Add(1)
