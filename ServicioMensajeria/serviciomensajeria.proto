@@ -24,7 +24,7 @@ message InformePaquetes{
 }
 
 message InformacionPaquete{
-    int32 idpaquete = 1;
+    string idpaquete = 1;
     string estado = 2;
 }
 

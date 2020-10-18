@@ -112,10 +112,15 @@ func (s *Server) RecibeInstrucciones(ctx context.Context, in *sm.DisponibleCamio
 	return paq, nil
 }
 
-//RealizaOrden cliente envia orden
+//RealizaOrden cliente envia orden, logistica retorna Codigo de seguimiento
 func (s *Server) RealizaOrden(ctx context.Context, in *sm.Orden) (*sm.CodSeguimiento, error) {
-	log.Printf("Receive message body from client: %s", in.Nombre)
-	return &sm.CodSeguimiento{}, nil
+	log.Printf("Se recibio paquete %s con Id: %s", in.Nombre, in.Id)
+
+	paq := CreaPaquete(in)
+	AgregaACola(paq, s)
+
+	return &sm.CodSeguimiento{CodigoSeguimiento: paq.CodigoSeguimiento}, nil
+
 }
 
 //SolicitaSeguimiento solicita estado de su orden
@@ -128,9 +133,9 @@ func (s *Server) SolicitaSeguimiento(ctx context.Context, in *sm.CodSeguimiento)
 func CreaPaquete(o *sm.Orden) *sm.Paquete {
 	if o.Tipo == "Normal" || o.Tipo == "Prioritario" {
 		CodSeg = CodSeg + 1
-		return &sm.Paquete{Id: o.Id, CodigoSeguimiento: CodSeg, Tipo: o.Tipo, Valor: o.Valor, Intentos: 0, Estado: "En bodega", Origen: o.Origen, Destino: o.Destino}
+		return &sm.Paquete{Id: o.Id, CodigoSeguimiento: CodSeg, Tipo: o.Tipo, Valor: o.Valor, Intentos: 0, Estado: "En bodega", Origen: o.Origen, Destino: o.Destino, Nombre: o.Nombre}
 	}
-	return &sm.Paquete{Id: o.Id, CodigoSeguimiento: 0, Tipo: o.Tipo, Valor: o.Valor, Intentos: 0, Estado: "En bodega", Origen: o.Origen, Destino: o.Destino}
+	return &sm.Paquete{Id: o.Id, CodigoSeguimiento: 0, Tipo: o.Tipo, Valor: o.Valor, Intentos: 0, Estado: "En bodega", Origen: o.Origen, Destino: o.Destino, Nombre: o.Nombre}
 }
 
 //Para usar en local, cambiar ipport por ":"+port
@@ -145,7 +150,7 @@ func main() {
 
 	CodSeg = 0
 
-	paq := &sm.Paquete{Id: 1, CodigoSeguimiento: 1, Tipo: "Retail", Valor: 10, Intentos: 0, Estado: "En bodega", Origen: "Origen A", Destino: "Destino A"}
+	paq := &sm.Paquete{Id: "1", CodigoSeguimiento: 1, Tipo: "Retail", Valor: 10, Intentos: 0, Estado: "En bodega", Origen: "Origen A", Destino: "Destino A", Nombre: "Bicicleta"}
 
 	s.arrRetail = append(s.arrRetail, paq)
 

@@ -103,6 +103,7 @@ func CamionEntregaPaquetes(cam *Camion, conn *grpc.ClientConn) {
 	t1 := "0"
 	t2 := "0"
 	for ready != true && ready2 != true {
+		//Entrega el mas caro primero
 		if cam.paq1.Valor > cam.paq2.Valor {
 			r1, t1 = IntentaEntregar(cam.paq1, conn, ready)
 			r2, t2 = IntentaEntregar(cam.paq2, conn, ready2)
@@ -128,7 +129,29 @@ func CamionEntregaPaquetes(cam *Camion, conn *grpc.ClientConn) {
 				}
 			}
 		} else {
+			r1, t1 = IntentaEntregar(cam.paq2, conn, ready)
+			r2, t2 = IntentaEntregar(cam.paq1, conn, ready2)
+			if r1 == 1 && ready != true {
+				cam.paq2.Estado = "Recibido"
+				cam.fechaEntrega2 = t1
+				ready = true
+			}
+			if r2 == 1 && ready2 != true {
+				cam.paq1.Estado = "Recibido"
+				cam.fechaEntrega1 = t2
+				ready2 = true
+			}
 
+			if cam.paq2.Estado != "Recibido" {
+				if ReintentaEntregar(cam.paq2) == 0 {
+					ready = true
+				}
+			}
+			if cam.paq1.Estado != "Recibido" {
+				if ReintentaEntregar(cam.paq1) == 0 {
+					ready2 = true
+				}
+			}
 		}
 	}
 }
