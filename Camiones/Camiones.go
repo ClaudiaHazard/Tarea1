@@ -4,8 +4,8 @@ import (
 	"log"
 	"math/rand"
 	"reflect"
-
 	"sync"
+	"time"
 
 	sm "github.com/ClaudiaHazard/Tarea1/ServicioMensajeria"
 	"golang.org/x/net/context"
@@ -29,7 +29,9 @@ type Camion struct {
 	tipo           string
 	disponible     bool
 	paq1           *sm.Paquete
+	fechaEntrega1  string
 	paq2           *sm.Paquete
+	fechaEntrega2  string
 	EntrPrevRetail bool
 	PaqCargRetail  bool
 }
@@ -77,16 +79,18 @@ func ReintentaEntregar(paq *sm.Paquete) int {
 }
 
 //IntentaEntregar retorna 0 si todas las entragas fueron exitosas, 1 si ninguna, 2 si solo la segunda y 3 si solo la primera.
-func IntentaEntregar(paq *sm.Paquete, conn *grpc.ClientConn, ready bool) int {
+func IntentaEntregar(paq *sm.Paquete, conn *grpc.ClientConn, ready bool) (int, string) {
 	res := EntregaPaquete()
+	tiempoEntrega := "0"
 	if res == 1 && ready != true {
 		paq.Estado = "Recibido"
 		ready = true
+		tiempoEntrega = time.Now().Format("2006-01-02 15:04:05")
 	}
 	//SendEstado
 	wg.Add(1)
 	go EntregaPosicionEntregaActual(conn, paq)
-	return res
+	return res, tiempoEntrega
 }
 
 //CamionEntregaPaquetes intenta entregar los paquetes que lleva a sus destinos y vuelve a central.
@@ -95,16 +99,20 @@ func CamionEntregaPaquetes(cam *Camion, conn *grpc.ClientConn) {
 	ready2 := false
 	r1 := 0
 	r2 := 0
+	t1 := "0"
+	t2 := "0"
 	for ready != true && ready2 != true {
 		if cam.paq1.Valor > cam.paq2.Valor {
-			r1 = IntentaEntregar(cam.paq1, conn, ready)
-			r2 = IntentaEntregar(cam.paq2, conn, ready2)
+			r1, t1 = IntentaEntregar(cam.paq1, conn, ready)
+			r2, t2 = IntentaEntregar(cam.paq2, conn, ready2)
 			if r1 == 1 && ready != true {
 				cam.paq1.Estado = "Recibido"
+				cam.fechaEntrega1 = t1
 				ready = true
 			}
 			if r2 == 1 && ready2 != true {
 				cam.paq2.Estado = "Recibido"
+				cam.fechaEntrega2 = t2
 				ready2 = true
 			}
 
@@ -182,7 +190,6 @@ func CamionDisponible(conn *grpc.ClientConn, cam Camion) *sm.Paquete {
 		log.Fatalf("Error al llamar EntregaPosicion: %s", err)
 	}
 	return response
-
 }
 
 func holis(cam *Camion) {
@@ -200,9 +207,9 @@ func main() {
 		log.Fatalf("did not connect: %s", err)
 	}
 
-	c1 := Camion{1, "Retail", true, &sm.Paquete{}, &sm.Paquete{}, false, false}
-	c2 := Camion{2, "Retail", true, &sm.Paquete{}, &sm.Paquete{}, false, false}
-	c3 := Camion{3, "Normal", true, &sm.Paquete{}, &sm.Paquete{}, false, false}
+	c1 := Camion{1, "Retail", true, &sm.Paquete{}, "0", &sm.Paquete{}, "0", false, false}
+	c2 := Camion{2, "Retail", true, &sm.Paquete{}, "0", &sm.Paquete{}, "0", false, false}
+	c3 := Camion{3, "Normal", true, &sm.Paquete{}, "0", &sm.Paquete{}, "0", false, false}
 
 	wg.Add(1)
 	go holis(&c1)
