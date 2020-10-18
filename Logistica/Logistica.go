@@ -87,34 +87,34 @@ func AsignaPaquete(s *Logistica, tipoCam string, entrPrevRetail bool, paqCargRet
 	return sm.Paquete{}
 }
 
-//EntregaPosicion recibe paquete de Camiones en Logistica
+//EntregaPosicion Entrega actualizacion de paquete
 func (s *Server) EntregaPosicion(ctx context.Context, in *sm.InformacionPaquete) (*sm.Message, error) {
-	log.Printf("Receive message body from client: %d", in.CodigoSeguimiento)
+	log.Printf("Receive message body from client: %d", in.Idpaquete)
 	//s = ctx.Value
 	return &sm.Message{Body: "Hola desde Logistica!"}, nil
 }
 
-//InformaEntrega recibe paquete de Camiones en Logistica
-func (s *Server) InformaEntrega(ctx context.Context, in *sm.Message) (*sm.Message, error) {
-	log.Printf("Receive message body from client: %s yep %s", in.Body, s.clienteid)
+//InformaEntrega Informaque camion termino orden
+func (s *Server) InformaEntrega(ctx context.Context, in *sm.InformePaquetes) (*sm.Message, error) {
+	log.Printf("Receive message body from client: yep")
 	tipoCam := ctx.Value("tipo")
 	log.Printf(tipoCam.(string))
 	return &sm.Message{Body: "Hola desde Logistica! camion numero " + s.clienteid}, nil
 }
 
-//RecibeInstrucciones recibe paquete de Camiones en Logistica
-func (s *Server) RecibeInstrucciones(ctx context.Context, in *sm.Message) (*sm.Paquete, error) {
-	log.Printf("Receive message body from client: %s", in.Body)
+//RecibeInstrucciones Camion avisa que esta disponible y se le envia paquete
+func (s *Server) RecibeInstrucciones(ctx context.Context, in *sm.DisponibleCamion) (*sm.Paquete, error) {
+	log.Printf("Receive message body from client: %d", in.Id)
 	return &sm.Paquete{}, nil
 }
 
-//RealizaOrden recibe paquete de Camiones en Logistica
+//RealizaOrden cliente envia orden
 func (s *Server) RealizaOrden(ctx context.Context, in *sm.Orden) (*sm.CodSeguimiento, error) {
 	log.Printf("Receive message body from client: %s", in.Nombre)
 	return &sm.CodSeguimiento{}, nil
 }
 
-//SolicitaSeguimiento recibe paquete de Camiones en Logistica
+//SolicitaSeguimiento solicita estado de su orden
 func (s *Server) SolicitaSeguimiento(ctx context.Context, in *sm.CodSeguimiento) (*sm.Estado, error) {
 	log.Printf("Receive message body from client: %d y %s", in.CodigoSeguimiento, s.clienteid)
 	return &sm.Estado{Estado: "Bonito"}, nil
@@ -135,8 +135,6 @@ func main() {
 	fmt.Println("En espera de Informacion paquetes para servidor")
 
 	sm.RegisterMensajeriaServiceServer(grpcServer, &s)
-
-	s = Server{}
 
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve gRPC server over "+ipport+": %v", err)
