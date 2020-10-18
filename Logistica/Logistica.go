@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"github.com/streadway/amqp"
+	"strconv"
+
 
 	sm "github.com/ClaudiaHazard/Tarea1/ServicioMensajeria"
 	"google.golang.org/grpc"
@@ -16,6 +19,14 @@ const (
 	ipport = ":50051"
 )
 
+
+//error handling
+func failOnError(err error, msg string) {
+	if err != nil {
+		log.Fatalf("%s: %s", msg, err)
+	}
+}
+
 //CamionResp para reconocer llamadas de camion en Logistica.
 type CamionResp struct {
 	id   int32
@@ -24,6 +35,8 @@ type CamionResp struct {
 
 //CodSeg Codigo de seguimiento que se incrementa en uno cada vez que se genera un nuevo codigo
 var CodSeg int32
+var conn *amqp.Connection
+var err error
 
 //Server datos
 type Server struct {
@@ -94,11 +107,76 @@ func (s *Server) EntregaPosicion(ctx context.Context, in *sm.InformacionPaquete)
 	return &sm.Message{Body: "Ok"}, nil
 }
 
+//ReporteFinanzas envía a finanzas datos de paquetes completados
+func ReporteFinanzas (pa *sm.Paquete,pa2 *sm.Paquete, conn *amqp.Connection) {
+	ch, err := conn.Channel()
+	failOnError(err, "Failed to open a channel")
+	defer ch.Close()
+
+	q, err := ch.QueueDeclare(
+		"hello", // name
+		false,   // durable
+		false,   // delete when unused
+		false,   // exclusive
+		false,   // no-wait
+		nil,     // arguments
+	)
+
+	failOnError(err, "Failed to declare a queue")	
+
+	var entre string
+	if (pa.Estado=="Recibido"){
+		entre="true"
+	} else if (pa.Estado=="No Recibido"){
+		entre="false"
+	}
+
+	var entre2 string
+	if (pa2.Estado=="Recibido"){
+		entre2="true"
+	} else if (pa2.Estado=="No Recibido"){
+		entre2="false"
+	}
+
+	body := `{"ID":` + `"`+ pa.Id + `"` + `, "intentos" :`  + strconv.Itoa(int(pa.Intentos)) +  `, "entregado":` +  entre + `, "valor" :  ` + strconv.Itoa(int(pa.Valor))  + `, "tipo": ` + `"` +pa.Tipo + `"` +  `}`
+	err = ch.Publish(
+		"",     // exchange
+		q.Name, // routing key
+		false,  // mandatory
+		false,  // immediate
+		amqp.Publishing{
+			ContentType: "application/json",
+			Body:        []byte(body),
+		})
+	//log.Printf(" [x] Sent %s", body)
+	failOnError(err, "Failed to publish a message")
+
+	body2 := `{"ID":` + `"`+ pa2.Id + `"` + `, "intentos" :`  + strconv.Itoa(int(pa2.Intentos)) +  `, "entregado":` +  entre2 + `, "valor" :  ` + strconv.Itoa(int(pa2.Valor))  + `, "tipo": ` + `"` +pa2.Tipo + `"` +  `}`
+	err = ch.Publish(
+		"",     // exchange
+		q.Name, // routing key
+		false,  // mandatory
+		false,  // immediate
+		amqp.Publishing{
+			ContentType: "application/json",
+			Body:        []byte(body2),
+		})
+	//log.Printf(" [x] Sent %s", body2)
+	failOnError(err, "Failed to publish a message")
+
+}
+
 //InformaEntrega Informaque camion termino entrega
 func (s *Server) InformaEntrega(ctx context.Context, in *sm.InformePaquetes) (*sm.Message, error) {
+
 	log.Printf("Entrega completada.")
+	pa :=in.Paquetes[0]
+
+	pa2 :=in.Paquetes[1]
 
 	//Aqui se debe enviar mensaje a Finanzas con los 2 paquetes para que calcule lo que deba calcular.
+	
+	ReporteFinanzas(pa,pa2,conn)
 
 	return &sm.Message{Body: "Ok"}, nil
 }
@@ -147,6 +225,12 @@ func main() {
 	}
 
 	s := Server{"1", []*sm.Paquete{}, []*sm.Paquete{}, []*sm.Paquete{}, make(map[int32]string)}
+
+	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+	failOnError(err, "Failed to connect to RabbitMQ")
+	defer conn.Close()
+
+
 
 	CodSeg = 10000
 
