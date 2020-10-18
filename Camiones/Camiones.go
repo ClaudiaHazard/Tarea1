@@ -279,7 +279,6 @@ func CreaRegistro(cam *Camion) *os.File {
 	if err != nil {
 		log.Fatalf("Fallo al crear csv file: %s", err)
 	}
-	defer csvFile.Close()
 
 	//Escribe lo que ira en cada columna
 	csvwriter := csv.NewWriter(csvFile)

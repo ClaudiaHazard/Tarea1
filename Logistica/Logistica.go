@@ -2,12 +2,15 @@ package main
 
 import (
 	"context"
+	"encoding/csv"
 	"fmt"
 	"log"
 	"net"
-	"github.com/streadway/amqp"
+	"os"
 	"strconv"
+	"time"
 
+	"github.com/streadway/amqp"
 
 	sm "github.com/ClaudiaHazard/Tarea1/ServicioMensajeria"
 	"google.golang.org/grpc"
@@ -18,7 +21,6 @@ const (
 	//ipportLogistica = "10.6.40.162:50051"
 	ipport = ":50051"
 )
-
 
 //error handling
 func failOnError(err error, msg string) {
@@ -37,6 +39,7 @@ type CamionResp struct {
 var CodSeg int32
 var conn *amqp.Connection
 var err error
+var csvFile *os.File
 
 //Server datos
 type Server struct {
@@ -108,7 +111,7 @@ func (s *Server) EntregaPosicion(ctx context.Context, in *sm.InformacionPaquete)
 }
 
 //ReporteFinanzas envía a finanzas datos de paquetes completados
-func ReporteFinanzas (pa *sm.Paquete,pa2 *sm.Paquete, conn *amqp.Connection) {
+func ReporteFinanzas(pa *sm.Paquete, pa2 *sm.Paquete, conn *amqp.Connection) {
 	ch, err := conn.Channel()
 	failOnError(err, "Failed to open a channel")
 	defer ch.Close()
@@ -122,23 +125,23 @@ func ReporteFinanzas (pa *sm.Paquete,pa2 *sm.Paquete, conn *amqp.Connection) {
 		nil,     // arguments
 	)
 
-	failOnError(err, "Failed to declare a queue")	
+	failOnError(err, "Failed to declare a queue")
 
 	var entre string
-	if (pa.Estado=="Recibido"){
-		entre="true"
-	} else if (pa.Estado=="No Recibido"){
-		entre="false"
+	if pa.Estado == "Recibido" {
+		entre = "true"
+	} else if pa.Estado == "No Recibido" {
+		entre = "false"
 	}
 
 	var entre2 string
-	if (pa2.Estado=="Recibido"){
-		entre2="true"
-	} else if (pa2.Estado=="No Recibido"){
-		entre2="false"
+	if pa2.Estado == "Recibido" {
+		entre2 = "true"
+	} else if pa2.Estado == "No Recibido" {
+		entre2 = "false"
 	}
 
-	body := `{"ID":` + `"`+ pa.Id + `"` + `, "intentos" :`  + strconv.Itoa(int(pa.Intentos)) +  `, "entregado":` +  entre + `, "valor" :  ` + strconv.Itoa(int(pa.Valor))  + `, "tipo": ` + `"` +pa.Tipo + `"` +  `}`
+	body := `{"ID":` + `"` + pa.Id + `"` + `, "intentos" :` + strconv.Itoa(int(pa.Intentos)) + `, "entregado":` + entre + `, "valor" :  ` + strconv.Itoa(int(pa.Valor)) + `, "tipo": ` + `"` + pa.Tipo + `"` + `}`
 	err = ch.Publish(
 		"",     // exchange
 		q.Name, // routing key
@@ -151,7 +154,7 @@ func ReporteFinanzas (pa *sm.Paquete,pa2 *sm.Paquete, conn *amqp.Connection) {
 	//log.Printf(" [x] Sent %s", body)
 	failOnError(err, "Failed to publish a message")
 
-	body2 := `{"ID":` + `"`+ pa2.Id + `"` + `, "intentos" :`  + strconv.Itoa(int(pa2.Intentos)) +  `, "entregado":` +  entre2 + `, "valor" :  ` + strconv.Itoa(int(pa2.Valor))  + `, "tipo": ` + `"` +pa2.Tipo + `"` +  `}`
+	body2 := `{"ID":` + `"` + pa2.Id + `"` + `, "intentos" :` + strconv.Itoa(int(pa2.Intentos)) + `, "entregado":` + entre2 + `, "valor" :  ` + strconv.Itoa(int(pa2.Valor)) + `, "tipo": ` + `"` + pa2.Tipo + `"` + `}`
 	err = ch.Publish(
 		"",     // exchange
 		q.Name, // routing key
@@ -170,13 +173,13 @@ func ReporteFinanzas (pa *sm.Paquete,pa2 *sm.Paquete, conn *amqp.Connection) {
 func (s *Server) InformaEntrega(ctx context.Context, in *sm.InformePaquetes) (*sm.Message, error) {
 
 	log.Printf("Entrega completada.")
-	pa :=in.Paquetes[0]
+	pa := in.Paquetes[0]
 
-	pa2 :=in.Paquetes[1]
+	pa2 := in.Paquetes[1]
 
 	//Aqui se debe enviar mensaje a Finanzas con los 2 paquetes para que calcule lo que deba calcular.
-	
-	ReporteFinanzas(pa,pa2,conn)
+
+	ReporteFinanzas(pa, pa2, conn)
 
 	return &sm.Message{Body: "Ok"}, nil
 }
@@ -195,7 +198,8 @@ func (s *Server) RealizaOrden(ctx context.Context, in *sm.Orden) (*sm.CodSeguimi
 	paq := CreaPaquete(in)
 	AgregaACola(paq, s)
 
-	//Agregar datos a registro archivo csv de la nueva orden junto con el timestamp time.Now().Format("2006-01-02 15:04:05")
+	//Agrega datos de la orden al registro
+	EditaResigtro(csvFile, in, paq.CodigoSeguimiento)
 
 	return &sm.CodSeguimiento{CodigoSeguimiento: paq.CodigoSeguimiento}, nil
 
@@ -216,6 +220,30 @@ func CreaPaquete(o *sm.Orden) *sm.Paquete {
 	return &sm.Paquete{Id: o.Id, CodigoSeguimiento: 0, Tipo: o.Tipo, Valor: o.Valor, Intentos: 0, Estado: "En bodega", Origen: o.Origen, Destino: o.Destino, Nombre: o.Nombre}
 }
 
+//CreaRegistro en el que escribira el camion.
+func CreaRegistro() *os.File {
+	csvFile, err := os.Create("RegistroLogistica.csv")
+
+	if err != nil {
+		log.Fatalf("Fallo al crear csv file: %s", err)
+	}
+	//Escribe lo que ira en cada columna
+	csvwriter := csv.NewWriter(csvFile)
+	defer csvwriter.Flush()
+	val := []string{"timestamp", "id-paquete", "tipo", "nombre", "valor", "origen", "destino", "seguimiento"}
+	csvwriter.Write(val)
+
+	return csvFile
+
+}
+
+//EditaResigtro agrega registro del camion a el csv file.
+func EditaResigtro(csvFile *os.File, o *sm.Orden, nSeg int32) {
+	csvwriter := csv.NewWriter(csvFile)
+	val := []string{time.Now().Format("2006-01-02 15:04:05"), o.Id, o.Tipo, o.Nombre, strconv.Itoa(int(o.Valor)), o.Origen, o.Destino, strconv.Itoa(int(nSeg))}
+	csvwriter.Write(val)
+}
+
 //Para usar en local, cambiar ipport por ":"+port
 func main() {
 	lis, err := net.Listen("tcp", ipport)
@@ -226,11 +254,11 @@ func main() {
 
 	s := Server{"1", []*sm.Paquete{}, []*sm.Paquete{}, []*sm.Paquete{}, make(map[int32]string)}
 
+	CreaRegistro()
+
 	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
 	failOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
-
-
 
 	CodSeg = 10000
 
