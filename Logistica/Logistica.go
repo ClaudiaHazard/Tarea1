@@ -18,8 +18,10 @@ import (
 
 //IP local 10.6.40.162
 const (
-	//ipportLogistica = "10.6.40.162:50051"
-	ipport = ":50051"
+	ipportgrpc = "10.6.40.162:50051"
+	//ipportgrpc = ":50051"
+	ipportrabbitmq = "amqp://test:test@10.6.40.1:5672/"
+	//ipportrabbitmq = "amqp://guest:guest@localhost:5672/"
 )
 
 //error handling
@@ -247,10 +249,10 @@ func EditaResigtro(csvFile *os.File, o *sm.Orden, nSeg int32) {
 //Para usar en local, cambiar ipport por ":"+port
 func main() {
 	// Escucha las conexiones grpc
-	lis, err := net.Listen("tcp", ipport)
+	lis, err := net.Listen("tcp", ipportgrpc)
 
 	if err != nil {
-		log.Fatalf("Failed to listen on "+ipport+": %v", err)
+		log.Fatalf("Failed to listen on "+ipportgrpc+": %v", err)
 	}
 
 	s := Server{"1", []*sm.Paquete{}, []*sm.Paquete{}, []*sm.Paquete{}, make(map[int32]string)}
@@ -259,7 +261,8 @@ func main() {
 	CreaRegistro()
 
 	//Crea la conexion RabbitMQ
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+	conn, err := amqp.Dial(ipportrabbitmq)
+
 	failOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
 
@@ -274,7 +277,7 @@ func main() {
 	sm.RegisterMensajeriaServiceServer(grpcServer, &s)
 
 	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("Failed to serve gRPC server over "+ipport+": %v", err)
+		log.Fatalf("Failed to serve gRPC server over "+ipportgrpc+": %v", err)
 	}
 
 }
