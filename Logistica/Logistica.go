@@ -18,10 +18,10 @@ import (
 
 //IP local 10.6.40.162
 const (
-	ipportgrpc = "10.6.40.162:50051"
-	//ipportgrpc = ":50051"
-	ipportrabbitmq = "amqp://test:test@10.6.40.1:5672/"
-	//ipportrabbitmq = "amqp://guest:guest@localhost:5672/"
+	//ipportgrpc = "10.6.40.162:50051"
+	ipportgrpc = ":50051"
+	//ipportrabbitmq = "amqp://test:test@10.6.40.1:5672/"
+	ipportrabbitmq = "amqp://guest:guest@localhost:5672/"
 )
 
 //error handling

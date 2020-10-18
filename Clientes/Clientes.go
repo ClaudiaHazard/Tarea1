@@ -17,8 +17,8 @@ import (
 
 //IP local 10.6.40.163
 const (
-	ipport = "10.6.40.162:50051"
-	//ipport = ":50051"
+	//ipport = "10.6.40.162:50051"
+	ipport = ":50051"
 )
 
 //EnviaOrdenCliente de Cliente a Logistica
