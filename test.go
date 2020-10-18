@@ -202,10 +202,18 @@ func main() {
 	wg.Add(1)
 	go inicializa(&c3)
 
-	wg.Wait()
-
 	m := make(map[int]string)
 	m[123] = "En proceso"
 	log.Printf("Estado del paquete con codigo %s\n", m[123])
 
+	ti := 5
+	tRec := time.Now().Add(time.Second * time.Duration(ti))
+	log.Println(tRec)
+	log.Println(tRec.Sub(time.Now()))
+	for tRec.Sub(time.Now()) > time.Duration(0) {
+		log.Printf("Hola\n")
+		time.Sleep(500 * time.Millisecond)
+	}
+
+	wg.Wait()
 }

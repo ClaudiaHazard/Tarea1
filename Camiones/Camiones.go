@@ -44,7 +44,8 @@ type CamionResp struct {
 }
 
 //EntregaPaquete intenta entregar paquete.
-func EntregaPaquete() int {
+func EntregaPaquete(te int) int {
+	time.Sleep(time.Duration(te) * time.Millisecond)
 	c := rand.Float64()
 	if c < 0.8 {
 		return 1
@@ -80,8 +81,8 @@ func ReintentaEntregar(paq *sm.Paquete) int {
 }
 
 //IntentaEntregar retorna 0 si todas las entragas fueron exitosas, 1 si ninguna, 2 si solo la segunda y 3 si solo la primera.
-func IntentaEntregar(paq *sm.Paquete, conn *grpc.ClientConn, ready bool) (int, string) {
-	res := EntregaPaquete()
+func IntentaEntregar(paq *sm.Paquete, conn *grpc.ClientConn, ready bool, te int) (int, string) {
+	res := EntregaPaquete(te)
 	tiempoEntrega := "0"
 	if res == 1 && ready != true {
 		paq.Estado = "Recibido"
@@ -95,7 +96,7 @@ func IntentaEntregar(paq *sm.Paquete, conn *grpc.ClientConn, ready bool) (int, s
 }
 
 //CamionEntregaPaquetes intenta entregar los paquetes que lleva a sus destinos y vuelve a central.
-func CamionEntregaPaquetes(cam *Camion, conn *grpc.ClientConn) {
+func CamionEntregaPaquetes(cam *Camion, conn *grpc.ClientConn, te int) {
 	ready := false
 	ready2 := false
 	r1 := 0
@@ -105,8 +106,8 @@ func CamionEntregaPaquetes(cam *Camion, conn *grpc.ClientConn) {
 	for ready != true && ready2 != true {
 		//Entrega el mas caro primero
 		if cam.paq1.Valor > cam.paq2.Valor {
-			r1, t1 = IntentaEntregar(cam.paq1, conn, ready)
-			r2, t2 = IntentaEntregar(cam.paq2, conn, ready2)
+			r1, t1 = IntentaEntregar(cam.paq1, conn, ready, te)
+			r2, t2 = IntentaEntregar(cam.paq2, conn, ready2, te)
 			if r1 == 1 && ready != true {
 				cam.paq1.Estado = "Recibido"
 				cam.fechaEntrega1 = t1
@@ -129,8 +130,8 @@ func CamionEntregaPaquetes(cam *Camion, conn *grpc.ClientConn) {
 				}
 			}
 		} else {
-			r1, t1 = IntentaEntregar(cam.paq2, conn, ready)
-			r2, t2 = IntentaEntregar(cam.paq1, conn, ready2)
+			r1, t1 = IntentaEntregar(cam.paq2, conn, ready, te)
+			r2, t2 = IntentaEntregar(cam.paq1, conn, ready2, te)
 			if r1 == 1 && ready != true {
 				cam.paq2.Estado = "Recibido"
 				cam.fechaEntrega2 = t1
@@ -195,7 +196,7 @@ func EntregaPosicionEntregaActual(conn *grpc.ClientConn, paq *sm.Paquete) string
 	c := sm.NewMensajeriaServiceClient(conn)
 	ctx := context.Background()
 
-	response, err := c.EntregaPosicion(ctx, &sm.InformacionPaquete{Idpaquete: paq.Id, Estado: paq.Estado})
+	response, err := c.EntregaPosicion(ctx, &sm.InformacionPaquete{CodigoSeguimiento: paq.CodigoSeguimiento, Estado: paq.Estado})
 	if err != nil {
 		log.Fatalf("Error al llamar EntregaPosicion: %s", err)
 	}
@@ -226,29 +227,59 @@ func holis(cam *Camion) {
 }
 
 //CamionEspera camión que no tiene paquetes recibe un paquete, y luego espera a poder cargar uno
-func CamionEspera(cam *Camion, conn *grpc.ClientConn, ti int) {
-	cam.paq1 = CamionDisponible(conn, cam)
-	//como saber a donde ir en que caso? porque disponible sólo ifnorma que está disponible
+func CamionEspera(cam *Camion, conn *grpc.ClientConn, ti int, te int) {
+	tRec := time.Now()
+	for (cam.paq1 == &sm.Paquete{}) {
+		cam.paq1 = CamionDisponible(conn, cam)
+		tRec = time.Now().Add(time.Millisecond * time.Duration(ti))
+	}
+	for (cam.paq2 == &sm.Paquete{} || tRec.Sub(time.Now()) > time.Duration(0)) {
+		cam.paq2 = CamionDisponible(conn, cam)
+		//Por ahora lo deje así para que no mande tantos mensajes.
+		time.Sleep(500 * time.Millisecond)
+	}
+	//Paquetes salen de central
+	cam.paq1.Estado = "En Camino"
+	if (cam.paq2 != &sm.Paquete{}) {
+		cam.paq1.Estado = "En Camino"
+	}
 
-	//ejecutar disponible y esperar por resp una cierta cantidad de tiempo, si no se cumple, terminar
-	//for {
-	//	cam.paq2=
-	//}
+	CamionEntregaPaquetes(cam, conn, te)
+	//Si vuelve a central y los paquetes no cambiaron su estado a recibido, el paquete no fue entregado.
+	if cam.paq1.Estado == "En Camino" {
+		cam.paq1.Estado = "No Recibido"
+	}
+	if cam.paq2.Estado == "En Camino" {
+		cam.paq2.Estado = "No recibido"
+	}
+
+	//Camion avisa que vuelve a central.
+	InformaPaqueteLogistica(conn, cam)
+
+	//Agrega datos de los paquetes al registro.
+	//Camion vuelve a avisar que esta en espera de mas paquetes.
 
 }
 
 func main() {
 	var conn *grpc.ClientConn
 	var ti int
-	fmt.Println("Ingrese duración de espera por segunda orden: ")
+	var te int
+
+	fmt.Println("Ingrese duración de espera por segunda orden en milisegundos: ")
 	fmt.Scanln(&ti)
 
+	fmt.Println("Ingrese duración de entrega por paquete en milisegundos: ")
+	fmt.Scanln(&te)
+
+	//Se crea la conexion con el servidor Logistica
 	conn, err := grpc.Dial(ipport, grpc.WithInsecure(), grpc.WithBlock())
 
 	if err != nil {
-		log.Fatalf("did not connect: %s", err)
+		log.Fatalf("No se pudo conectar: %s", err)
 	}
 
+	//Se inicializan los 3 camiones.
 	c1 := Camion{1, "Retail", true, &sm.Paquete{}, "0", &sm.Paquete{}, "0", false, false}
 	c2 := Camion{2, "Retail", true, &sm.Paquete{}, "0", &sm.Paquete{}, "0", false, false}
 	c3 := Camion{3, "Normal", true, &sm.Paquete{}, "0", &sm.Paquete{}, "0", false, false}
