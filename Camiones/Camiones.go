@@ -198,8 +198,24 @@ func holis(cam *Camion) {
 
 }
 
+
+//CamionEspera camión que no tiene paquetes recibe un paquete, y luego espera a poder cargar uno
+func CamionEspera (cam *Camion, conn *grpc.ClientConn, ti int) {
+	cam.paq1=CamionDisponible(conn,cam)
+	//como saber a donde ir en que caso? porque disponible sólo ifnorma que está disponible
+
+	//ejecutar disponible y esperar por resp una cierta cantidad de tiempo, si no se cumple, terminar
+	for {
+		cam.paq2=
+	}
+
+}
+
 func main() {
 	var conn *grpc.ClientConn
+	var ti int
+	fmt.Println("Ingrese duración de espera por segunda orden: ")
+	fmt.Scanln(&ti)
 
 	conn, err := grpc.Dial(ipport, grpc.WithInsecure(), grpc.WithBlock())
 
