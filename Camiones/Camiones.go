@@ -1,10 +1,13 @@
 package main
 
 import (
+	"encoding/csv"
 	"fmt"
 	"log"
 	"math/rand"
+	"os"
 	"reflect"
+	"strconv"
 	"sync"
 	"time"
 
@@ -220,6 +223,7 @@ func CamionDisponible(conn *grpc.ClientConn, cam *Camion) *sm.Paquete {
 
 //CamionEspera camión que no tiene paquetes recibe un paquete, y luego espera a poder cargar uno
 func CamionEspera(cam *Camion, conn *grpc.ClientConn, ti int, te int) {
+	csv := CreaRegistro(cam)
 	defer wg.Done()
 	//Por ahora ciclo infinito simplemente
 	for {
@@ -233,6 +237,7 @@ func CamionEspera(cam *Camion, conn *grpc.ClientConn, ti int, te int) {
 			//Por ahora lo deje así para que no mande tantos mensajes.
 			time.Sleep(500 * time.Millisecond)
 		}
+		cam.disponible = false
 		//Paquetes salen de central
 		cam.paq1.Estado = "En Camino"
 		if (cam.paq2 != &sm.Paquete{}) {
@@ -251,10 +256,50 @@ func CamionEspera(cam *Camion, conn *grpc.ClientConn, ti int, te int) {
 		//Camion avisa que vuelve a central.
 		InformaPaqueteLogistica(conn, cam)
 
-		//Agrega datos de los paquetes al registro.
+		EditaResigtro(cam, csv)
+		VaciaCamion(cam)
 		//Camion vuelve a avisar que esta en espera de mas paquetes.
 	}
 
+}
+
+//VaciaCamion vacia los paquetes en central y vuelve a estar disponible
+func VaciaCamion(cam *Camion) {
+	cam.paq1 = &sm.Paquete{}
+	cam.paq2 = &sm.Paquete{}
+	cam.disponible = true
+	cam.fechaEntrega1 = "0"
+	cam.fechaEntrega2 = "0"
+}
+
+//CreaRegistro en el que escribira el camion.
+func CreaRegistro(cam *Camion) *os.File {
+	csvFile, err := os.Create("RegistroCamion" + strconv.Itoa(int(cam.id)) + ".csv")
+
+	if err != nil {
+		log.Fatalf("Fallo al crear csv file: %s", err)
+	}
+	defer csvFile.Close()
+
+	//Escribe lo que ira en cada columna
+	csvwriter := csv.NewWriter(csvFile)
+	defer csvwriter.Flush()
+	val := []string{"id-paquete", "tipo", "valor", "origen", "destino", "intentos", "fecha-entrega"}
+	csvwriter.Write(val)
+
+	return csvFile
+
+}
+
+//EditaResigtro agrega registro del camion a el csv file.
+func EditaResigtro(cam *Camion, csvFile *os.File) {
+	csvwriter := csv.NewWriter(csvFile)
+	val := []string{cam.paq1.Id, cam.paq1.Tipo, strconv.Itoa(int(cam.paq1.Valor)), cam.paq1.Origen, cam.paq1.Destino, strconv.Itoa(int(cam.paq1.Intentos)), cam.fechaEntrega1}
+	csvwriter.Write(val)
+	if (cam.paq2 != &sm.Paquete{}) {
+		val := []string{cam.paq2.Id, cam.paq2.Tipo, strconv.Itoa(int(cam.paq2.Valor)), cam.paq2.Origen, cam.paq2.Destino, strconv.Itoa(int(cam.paq2.Intentos)), cam.fechaEntrega2}
+		csvwriter.Write(val)
+	}
 }
 
 func main() {

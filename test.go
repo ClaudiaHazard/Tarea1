@@ -1,8 +1,11 @@
 package main
 
 import (
+	"encoding/csv"
 	"log"
 	"math/rand"
+	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -37,8 +40,8 @@ type Camion struct {
 	id         int32
 	tipo       string
 	disponible bool
-	paq1       Paquete
-	paq2       Paquete
+	paq1       *sm.Paquete
+	paq2       *sm.Paquete
 }
 
 //AgregaACola agrega paquete a cola correspondiente
@@ -139,37 +142,6 @@ func IntentaEntregar(paq1 Paquete, paq2 Paquete) (int, int) {
 	return res, res2
 }
 
-//CamionEntregaPaquetes intenta entregar los paquetes que lleva a sus destinos y vuelve a central.
-func CamionEntregaPaquetes(cam *Camion) {
-	ready := false
-	ready2 := false
-	for ready != true && ready2 != true {
-		if cam.paq1.valor > cam.paq2.valor {
-			r1, r2 := IntentaEntregar(cam.paq1, cam.paq2)
-			if r1 == 1 && ready != true {
-				cam.paq1.estado = "Recibido"
-				ready = true
-			}
-			if r2 == 1 && ready2 != true {
-				cam.paq2.estado = "Recibido"
-				ready2 = true
-			}
-			//SendEstado
-
-			if cam.paq1.estado != "Recibido" {
-				if ReintentaEntregar(cam.paq1) == 0 {
-					ready = true
-				}
-			}
-			if cam.paq2.estado != "Recibido" {
-				if ReintentaEntregar(cam.paq1) == 0 {
-					ready2 = true
-				}
-			}
-		}
-	}
-}
-
 func holis(cam *Camion) {
 	defer wg.Done()
 	log.Printf("soy el camions %d\n", cam.id)
@@ -200,11 +172,35 @@ func Borrarpos(arr []*sm.Paquete, pos int) []*sm.Paquete {
 	return arr
 }
 
+//CreaRegistro en el que escribira el camion.
+func CreaRegistro(cam *Camion) *os.File {
+	csvFile, err := os.Create("RegistroCamion" + strconv.Itoa(int(cam.id)) + ".csv")
+
+	if err != nil {
+		log.Fatalf("Fallo al crear csv file: %s", err)
+	}
+	csvwriter := csv.NewWriter(csvFile)
+	defer csvwriter.Flush()
+	val := []string{"id-paquete", "tipo", "valor", "origen", "destino", "intentos"}
+	csvwriter.Write(val)
+	return csvFile
+}
+
+//EditaResigtro agrega registro del camion a el csv file.
+func EditaResigtro(cam *Camion, csvFile *os.File) {
+	csvwriter := csv.NewWriter(csvFile)
+	defer csvwriter.Flush()
+	val := []string{cam.paq1.Id, cam.paq1.Tipo, strconv.Itoa(int(cam.paq1.Valor)), cam.paq1.Origen, cam.paq1.Destino, strconv.Itoa(int(cam.paq1.Intentos))}
+	csvwriter.Write(val)
+	val = []string{cam.paq2.Id, cam.paq2.Tipo, strconv.Itoa(int(cam.paq2.Valor)), cam.paq2.Origen, cam.paq2.Destino, strconv.Itoa(int(cam.paq2.Intentos))}
+	csvwriter.Write(val)
+}
+
 func main() {
 
-	c1 := Camion{1, "Retail", true, Paquete{}, Paquete{}}
-	c2 := Camion{2, "Retail", true, Paquete{}, Paquete{}}
-	c3 := Camion{3, "Normal", true, Paquete{}, Paquete{}}
+	c1 := Camion{1, "Retail", true, &sm.Paquete{}, &sm.Paquete{}}
+	c2 := Camion{2, "Retail", true, &sm.Paquete{}, &sm.Paquete{}}
+	c3 := Camion{3, "Normal", true, &sm.Paquete{}, &sm.Paquete{}}
 
 	wg.Add(1)
 	go inicializa(&c1)
@@ -230,6 +226,16 @@ func main() {
 
 	paq1 := &sm.Paquete{Id: "1", CodigoSeguimiento: 1, Tipo: "Retail", Valor: 10, Intentos: 0, Estado: "En bodega", Origen: "Origen A", Destino: "Destino A", Nombre: "Bicicleta"}
 	paq2 := &sm.Paquete{Id: "2", CodigoSeguimiento: 2, Tipo: "Retail", Valor: 10, Intentos: 0, Estado: "En bodega", Origen: "Origen A", Destino: "Destino A", Nombre: "Bicicleta"}
+
+	csv := CreaRegistro(&c1)
+
+	c1.paq1 = paq1
+	c1.paq2 = paq2
+
+	EditaResigtro(&c1, csv)
+	EditaResigtro(&c1, csv)
+
+	csv.Close()
 
 	arrPaq := []*sm.Paquete{}
 	arrPaq = append(arrPaq, paq1)
