@@ -5,14 +5,14 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"strconv"
 	"time"
-
+    "math/rand"
 	sm "github.com/ClaudiaHazard/Tarea1/ServicioMensajeria"
 	"google.golang.org/grpc"
+	"sync"
 )
 
 //IP local 10.6.40.163
@@ -51,9 +51,73 @@ func EnviaCodCliente(conn *grpc.ClientConn, cod int32) string {
 	return response.Estado
 }
 
+//IndividualOrder recibe una entrada del archic csv y la envía a logística
+func IndividualOrder(record []string,tipo string, c *grpc.ClientConn) int32{
+	var order [6]string
+	order[1] = record[0]
+	order[2] = record[1]
+	order[3] = record[2]
+	order[4] = record[3]
+	order[5] = record[4]
+	if (tipo=="retail"){
+		order[0] = "retail"
+	} else {
+		if record[5] == "0" {
+			order[0] = "normal"
+		} else {
+			order[0] = "prioritario"
+		}
+	}
+
+	co, err := strconv.ParseInt(order[3], 10, 32)
+	if err == nil {
+		fmt.Println(co)
+	}
+	ccc := int32(co)
+	rett := EnviaOrdenCliente(c, order[0], order[1], order[2], ccc, order[4], order[5])
+
+	return rett
+
+} 
+
+//DoOrder recibe todos los datos de los csv, seleccionando uno al azar dependiendo del tipo de cliente
+func DoOrder (pym [][]string,reta [][]string, c *grpc.ClientConn, m int) {
+	for { 
+		var tii string
+		fmt.Println("Ingrese tipo de cliente: ")
+		fmt.Scanln(&tii)
+		var ins []string
+		if tii=="retail"{
+			ins = reta[rand.Intn(len(reta)-2)+1]
+		}else{
+			ins = pym[rand.Intn(len(pym)-2)+1]
+		}
+		r :=IndividualOrder(ins,tii,c)
+		fmt.Println("Orden ingresada, este es su codigo de seguimiento: ",r)
+		 time.Sleep(time.Duration(m) * time.Second) 
+	}
+}
+
+//PideSegui solicita ifnormación de un pquete con su código de seguimiento
+func PideSegui(c *grpc.ClientConn){
+	for {
+		var codd int32
+		fmt.Println("Ingrese codigo de seguimiento: ")
+		fmt.Scanln(&codd)
+
+		//envío y recepción de info de estado
+		info := EnviaCodCliente(c, codd)
+		//mostrar info
+		fmt.Println("Estado del paquete: ", info)
+	}
+}
 func main() {
 
 	var conn *grpc.ClientConn
+	var wg sync.WaitGroup
+	var t int
+	var fx string
+	var fx2 string
 
 	conn, err2 := grpc.Dial(ipport, grpc.WithInsecure(), grpc.WithBlock())
 
@@ -62,107 +126,39 @@ func main() {
 	}
 	defer conn.Close()
 
-	fmt.Println("Ingrese tipo de cliente: ")
-	var cli string
-	var fx string
-	var order [6]string
-	var t int
-	fmt.Scanln(&cli)
-	fmt.Println("Ingrese nombre de archivo: ")
+	fmt.Println("Ingrese tiempo de espera entre órdenes: ")
+
+	fmt.Scanln(&t)
+	fmt.Println("Ingrese nombre de archivo retail: ")
 	fmt.Scanln(&fx)
 	fx = fx + ".csv"
-	t = 1
+	fmt.Println("Ingrese nombre de archivo pymes: ")
+	fmt.Scanln(&fx2)
+	fx2 = fx2 + ".csv"	
 	csvfile, err := os.Open(fx)
 	if err != nil {
 		log.Fatalln("Couldn't open the csv file", err)
 	}
-	t = 1
+	csvfile2, err2 := os.Open(fx2)
+	if err2 != nil {
+		log.Fatalln("Couldn't open the csv file", err)
+	}	
 	r := csv.NewReader(csvfile)
-	if cli == "retail" {
-		var a int
-		a = 0
-		for {
-			// Read each record from csv
+	r2 :=csv.NewReader(csvfile2)
 
-			record, err := r.Read()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				log.Fatal(err)
-			}
-			if a != 0 {
-				order[0] = "retail"
-				order[1] = record[0]
-				order[2] = record[1]
-				order[3] = record[2]
-				order[4] = record[3]
-				order[5] = record[4]
-				//comunicarla al logistica y RECIBIR COD DE VERIFICACIÓN
-				co, err := strconv.ParseInt(order[3], 10, 32)
-				if err == nil {
-					fmt.Println(co)
-				}
-				c := int32(co)
-				EnviaOrdenCliente(conn, order[0], order[1], order[2], c, order[4], order[5])
-				//tipo,id,prod,valor,tienda,destino
-			}
-			//sleep
-			time.Sleep(time.Duration(t) * time.Second)
-			fmt.Println(order)
-			a = a + 1
-
-		}
-	} else {
-		//otro tipo
-		var a int
-		a = 0
-		for {
-			// Read each record from csv
-			record, err := r.Read()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				log.Fatal(err)
-			}
-			if a != 0 {
-				order[1] = record[0]
-				order[2] = record[1]
-				order[3] = record[2]
-				order[4] = record[3]
-				order[5] = record[4]
-				if record[5] == "0" {
-					order[0] = "normal"
-				} else {
-					order[0] = "prioritario"
-				}
-				//comunicarla al logistica y RECIBIR COD DE VERIFICACIÓN
-				co, err := strconv.ParseInt(order[3], 10, 32)
-				if err == nil {
-					fmt.Println(co)
-				}
-				c := int32(co)
-				rett := EnviaOrdenCliente(conn, order[0], order[1], order[2], c, order[4], order[5])
-				fmt.Println("Su código de seguimiento es: ", rett)
-			}
-			//sleep
-			time.Sleep(time.Duration(t) * time.Second)
-			fmt.Println(order)
-			a = a + 1
-
-		}
+	allretail, err := r.ReadAll()
+	if err != nil {
+		log.Fatal(err)
 	}
-	//Seguimiento de órdenes
-	for {
-		var codd int32
-		fmt.Println("Ingrese codigo de seguimiento: ")
-		fmt.Scanln(&codd)
 
-		//envío y recepción de info de estado
-		info := EnviaCodCliente(conn, codd)
-		//mostrar info
-		fmt.Println("Estado del paquete: ", info)
-	}
+	allpyme, err := r2.ReadAll()
+	if err != nil {
+		log.Fatal(err)
+	}	
+
+	wg.Add(1)
+	go DoOrder(allpyme,allretail,conn,t)
+	wg.Add(1)
+	go PideSegui(conn)
 
 }
