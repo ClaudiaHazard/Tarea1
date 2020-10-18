@@ -31,7 +31,7 @@ type Server struct {
 	arrRetail      []*sm.Paquete
 	arrPrioritario []*sm.Paquete
 	arrNormal      []*sm.Paquete
-	Seguimiento    map[int]string
+	Seguimiento    map[int32]string
 }
 
 //AgregaACola agrega paquete a cola correspondiente
@@ -89,14 +89,18 @@ func AsignaPaquete(s *Server, tipoCam string, entrPrevRetail bool, paqCargRetail
 
 //EntregaPosicion Entrega actualizacion de paquete
 func (s *Server) EntregaPosicion(ctx context.Context, in *sm.InformacionPaquete) (*sm.Message, error) {
-	log.Printf("Receive message body from client: %s", in.Idpaquete)
-	return &sm.Message{Body: "Hola desde Logistica!"}, nil
+	log.Printf("Recibido estado con codigo de seguimiento: %d", in.CodigoSeguimiento)
+	s.Seguimiento[in.CodigoSeguimiento] = in.Estado
+	return &sm.Message{Body: "Ok"}, nil
 }
 
-//InformaEntrega Informaque camion termino orden
+//InformaEntrega Informaque camion termino entrega
 func (s *Server) InformaEntrega(ctx context.Context, in *sm.InformePaquetes) (*sm.Message, error) {
-	log.Printf("Receive message body from client: yep")
-	return &sm.Message{Body: "Hola desde Logistica! camion numero " + s.clienteid}, nil
+	log.Printf("Entrega completada.")
+
+	//Aqui se debe enviar mensaje a Finanzas con los 2 paquetes para que calcule lo que deba calcular.
+
+	return &sm.Message{Body: "Ok"}, nil
 }
 
 //RecibeInstrucciones Camion avisa que esta disponible y se le envia paquete
@@ -113,14 +117,16 @@ func (s *Server) RealizaOrden(ctx context.Context, in *sm.Orden) (*sm.CodSeguimi
 	paq := CreaPaquete(in)
 	AgregaACola(paq, s)
 
+	//Agregar datos a registro archivo csv de la nueva orden junto con el timestamp time.Now().Format("2006-01-02 15:04:05")
+
 	return &sm.CodSeguimiento{CodigoSeguimiento: paq.CodigoSeguimiento}, nil
 
 }
 
 //SolicitaSeguimiento solicita estado de su orden
 func (s *Server) SolicitaSeguimiento(ctx context.Context, in *sm.CodSeguimiento) (*sm.Estado, error) {
-	log.Printf("Receive message body from client: %d y %s", in.CodigoSeguimiento, s.clienteid)
-	return &sm.Estado{Estado: "Bonito"}, nil
+	log.Printf("Se envia el estado del paquete con codigode seguimiento: %d", in.CodigoSeguimiento)
+	return &sm.Estado{Estado: s.Seguimiento[in.CodigoSeguimiento]}, nil
 }
 
 //CreaPaquete genera paquete de la orden que entrego el Cliente
@@ -140,7 +146,7 @@ func main() {
 		log.Fatalf("Failed to listen on "+ipport+": %v", err)
 	}
 
-	s := Server{"1", []*sm.Paquete{}, []*sm.Paquete{}, []*sm.Paquete{}, make(map[int]string)}
+	s := Server{"1", []*sm.Paquete{}, []*sm.Paquete{}, []*sm.Paquete{}, make(map[int32]string)}
 
 	CodSeg = 10000
 
