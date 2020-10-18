@@ -8,8 +8,8 @@ import (
 	"io"
 	"log"
 	"os"
-	"time"
 	"strconv"
+	"time"
 
 	sm "github.com/ClaudiaHazard/Tarea1/ServicioMensajeria"
 	"google.golang.org/grpc"
@@ -17,8 +17,8 @@ import (
 
 //IP local 10.6.40.163
 const (
-	//ipport = "10.6.40.162:50051"
-	ipport = ":50051"
+	ipport = "10.6.40.162:50051"
+	//ipport = ":50051"
 )
 
 //EnviaOrdenCliente de Cliente a Logistica
@@ -26,7 +26,7 @@ func EnviaOrdenCliente(conn *grpc.ClientConn, tip string, aidi string, pro strin
 
 	c := sm.NewMensajeriaServiceClient(conn)
 
-	response, err2 := c.RealizaOrden(context.Background(), &sm.Orden{Id: aidi, Tipo: tip, Valor:val, Origen: tien, Destino: dest,Nombre:pro})
+	response, err2 := c.RealizaOrden(context.Background(), &sm.Orden{Id: aidi, Tipo: tip, Valor: val, Origen: tien, Destino: dest, Nombre: pro})
 
 	if err2 != nil {
 		log.Fatalf("Error al llamar EnviaOrden: %s", err2)
@@ -36,7 +36,7 @@ func EnviaOrdenCliente(conn *grpc.ClientConn, tip string, aidi string, pro strin
 	return response.CodigoSeguimiento
 }
 
-//EnviaOrdenCliente de Cliente a Logistica
+//EnviaCodCliente cliente envia codigo de seguimiento
 func EnviaCodCliente(conn *grpc.ClientConn, cod int32) string {
 
 	c := sm.NewMensajeriaServiceClient(conn)
@@ -50,7 +50,6 @@ func EnviaCodCliente(conn *grpc.ClientConn, cod int32) string {
 
 	return response.Estado
 }
-
 
 func main() {
 
@@ -94,18 +93,18 @@ func main() {
 			}
 			if a != 0 {
 				order[0] = "retail"
-				order[1] = record[0] 
+				order[1] = record[0]
 				order[2] = record[1]
 				order[3] = record[2]
 				order[4] = record[3]
 				order[5] = record[4]
 				//comunicarla al logistica y RECIBIR COD DE VERIFICACIÓN
-				co,err:=strconv.ParseInt(order[3],10,32)
+				co, err := strconv.ParseInt(order[3], 10, 32)
 				if err == nil {
 					fmt.Println(co)
 				}
-				c:=int32(co)
-				EnviaOrdenCliente(conn,order[0],order[1],order[2],c,order[4],order[5])
+				c := int32(co)
+				EnviaOrdenCliente(conn, order[0], order[1], order[2], c, order[4], order[5])
 				//tipo,id,prod,valor,tienda,destino
 			}
 			//sleep
@@ -139,13 +138,13 @@ func main() {
 					order[0] = "prioritario"
 				}
 				//comunicarla al logistica y RECIBIR COD DE VERIFICACIÓN
-				co,err:=strconv.ParseInt(order[3],10,32)
+				co, err := strconv.ParseInt(order[3], 10, 32)
 				if err == nil {
 					fmt.Println(co)
 				}
-				c:=int32(co)				
-				rett := EnviaOrdenCliente(conn,order[0],order[1],order[2],c,order[4],order[5])
-				fmt.Println("Su código de seguimiento es: ",rett)
+				c := int32(co)
+				rett := EnviaOrdenCliente(conn, order[0], order[1], order[2], c, order[4], order[5])
+				fmt.Println("Su código de seguimiento es: ", rett)
 			}
 			//sleep
 			time.Sleep(time.Duration(t) * time.Second)
@@ -161,9 +160,9 @@ func main() {
 		fmt.Scanln(&codd)
 
 		//envío y recepción de info de estado
-		info := EnviaCodCliente(conn,codd)
+		info := EnviaCodCliente(conn, codd)
 		//mostrar info
-		fmt.Println("Estado del paquete: ",info)
+		fmt.Println("Estado del paquete: ", info)
 	}
 
 }
