@@ -5,6 +5,8 @@ import (
 	"math/rand"
 	"sync"
 	"time"
+
+	sm "github.com/ClaudiaHazard/Tarea1/ServicioMensajeria"
 )
 
 var wg sync.WaitGroup
@@ -190,15 +192,22 @@ func inicializa(cam *Camion) {
 
 }
 
+//Borrarpos borra elemento en posicion pos
+func Borrarpos(arr []*sm.Paquete, pos int) []*sm.Paquete {
+	copy(arr[pos:], arr[pos+1:])    // Shift a[i+1:] left one index.
+	arr[len(arr)-1] = &sm.Paquete{} // Erase last element (write zero value).
+	arr = arr[:len(arr)-1]
+	return arr
+}
+
 func main() {
 
 	c1 := Camion{1, "Retail", true, Paquete{}, Paquete{}}
 	c2 := Camion{2, "Retail", true, Paquete{}, Paquete{}}
 	c3 := Camion{3, "Normal", true, Paquete{}, Paquete{}}
 
-	wg2.Add(1)
+	wg.Add(1)
 	go inicializa(&c1)
-	wg2.Wait()
 	log.Printf("Termino w2")
 
 	wg.Add(1)
@@ -218,6 +227,16 @@ func main() {
 		log.Printf("Hola\n")
 		time.Sleep(500 * time.Millisecond)
 	}
+
+	paq1 := &sm.Paquete{Id: "1", CodigoSeguimiento: 1, Tipo: "Retail", Valor: 10, Intentos: 0, Estado: "En bodega", Origen: "Origen A", Destino: "Destino A", Nombre: "Bicicleta"}
+	paq2 := &sm.Paquete{Id: "2", CodigoSeguimiento: 2, Tipo: "Retail", Valor: 10, Intentos: 0, Estado: "En bodega", Origen: "Origen A", Destino: "Destino A", Nombre: "Bicicleta"}
+
+	arrPaq := []*sm.Paquete{}
+	arrPaq = append(arrPaq, paq1)
+	arrPaq = append(arrPaq, paq2)
+	log.Println(arrPaq)
+	Borrarpos(arrPaq, 0)
+	log.Println(arrPaq)
 
 	wg.Wait()
 }
