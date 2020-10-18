@@ -28,11 +28,16 @@ type Logistica struct {
 	arrRetail      []sm.Paquete
 	arrPrioritario []sm.Paquete
 	arrNormal      []sm.Paquete
+	clienteid      string
 }
 
 //Server datos
 type Server struct {
-	clienteid string
+	clienteid      string
+	camion         int
+	arrRetail      []sm.Paquete
+	arrPrioritario []sm.Paquete
+	arrNormal      []sm.Paquete
 }
 
 //AgregaACola agrega paquete a cola correspondiente
@@ -128,7 +133,7 @@ func main() {
 		log.Fatalf("Failed to listen on "+ipport+": %v", err)
 	}
 
-	s := Server{"Cliente1"}
+	s := Server{}
 
 	grpcServer := grpc.NewServer()
 
