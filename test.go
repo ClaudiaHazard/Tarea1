@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"sync"
 	"time"
 )
@@ -21,6 +22,15 @@ func prints() {
 	fmt.Scanln(&t)
 }
 
+func ranss() {
+	c := rand.Float64()
+	if c < 0.8 {
+		fmt.Println(1)
+	} else {
+		fmt.Println(0)
+	}
+}
+
 func main() {
 	wg.Add(1)
 	go prints()
@@ -28,5 +38,9 @@ func main() {
 	wg.Add(1)
 	go prints()
 	wg.Wait()
+
+	for range []int{6, 2, 4, 4, 45} {
+		ranss()
+	}
 
 }
