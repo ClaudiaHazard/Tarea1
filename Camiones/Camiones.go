@@ -296,9 +296,11 @@ func CamionEspera(cam *Camion, conn *grpc.ClientConn, ti int, te int) {
 		cam.disponible = false
 		//Paquetes salen de central
 		cam.paq1.Estado = "En Camino"
+		go EntregaPosicionEntregaActual(conn, cam.paq1)
 		log.Printf("Camion %d sale de central con paquete 1 con id %s.", cam.id, cam.paq1.Id)
 		if !ComparaPaquete(cam.paq2, &sm.Paquete{}) {
-			cam.paq1.Estado = "En Camino"
+			cam.paq2.Estado = "En Camino"
+			go EntregaPosicionEntregaActual(conn, cam.paq2)
 			log.Printf("Camion %d sale de central con paquete 2 con id %s.", cam.id, cam.paq2.Id)
 		}
 
