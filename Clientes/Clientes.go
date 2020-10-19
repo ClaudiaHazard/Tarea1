@@ -16,6 +16,8 @@ import (
 	"google.golang.org/grpc"
 )
 
+var wg sync.WaitGroup
+
 //IP local 10.6.40.163
 const (
 	ipport = "10.6.40.162:50051"
@@ -83,6 +85,7 @@ func IndividualOrder(record []string, tipo string, c *grpc.ClientConn) int32 {
 
 //DoOrder recibe todos los datos de los csv, seleccionando uno al azar dependiendo del tipo de cliente
 func DoOrder(pym [][]string, reta [][]string, c *grpc.ClientConn, m int) {
+	defer wg.Done()
 	for {
 		var tii string
 		fmt.Println("Ingrese tipo de cliente: ")
@@ -101,6 +104,7 @@ func DoOrder(pym [][]string, reta [][]string, c *grpc.ClientConn, m int) {
 
 //PideSegui solicita ifnormación de un pquete con su código de seguimiento
 func PideSegui(c *grpc.ClientConn) {
+	defer wg.Done()
 	for {
 		var codd int32
 		fmt.Println("Ingrese codigo de seguimiento: ")
@@ -115,7 +119,6 @@ func PideSegui(c *grpc.ClientConn) {
 func main() {
 
 	var conn *grpc.ClientConn
-	var wg sync.WaitGroup
 	var t int
 	var fx string
 	var fx2 string
@@ -127,13 +130,13 @@ func main() {
 	}
 	defer conn.Close()
 
-	fmt.Println("Ingrese tiempo de espera entre órdenes: ")
+	fmt.Println("Ingrese tiempo de espera entre órdenes en segundos: ")
 
 	fmt.Scanln(&t)
-	fmt.Println("Ingrese nombre de archivo retail: ")
+	fmt.Println("Ingrese nombre de archivo csv retail(ejemplo: si es retail.csv usted escribe retail): ")
 	fmt.Scanln(&fx)
 	fx = fx + ".csv"
-	fmt.Println("Ingrese nombre de archivo pymes: ")
+	fmt.Println("Ingrese nombre de archivo csv pymes(ejemplo: si es pymes.csv usted escribe pymes): ")
 	fmt.Scanln(&fx2)
 	fx2 = fx2 + ".csv"
 	csvfile, err := os.Open(fx)
@@ -162,4 +165,5 @@ func main() {
 	wg.Add(1)
 	go PideSegui(conn)
 
+	wg.Wait()
 }
