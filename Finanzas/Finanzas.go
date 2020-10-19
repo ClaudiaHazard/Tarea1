@@ -158,7 +158,7 @@ func main() {
 				csvWriter.WriteAll(strWrite)
 				csvWriter.Flush()
 				csvfile.Close()
-			} else {
+			} else if aidi==0 {
 				line := getLastLineWithSeek("caja.csv")
 				fmt.Println("Total hasta ahora: ", line[5])
 			}
