@@ -105,8 +105,6 @@ func DoOrder(pym [][]string, reta [][]string, c *grpc.ClientConn, m int) {
 		fmt.Printf("Ingrese valor valido")
 	}
 
-	time.Sleep(time.Duration(m) * time.Second)
-
 }
 
 //PideSegui solicita ifnormación de un pquete con su código de seguimiento
@@ -138,7 +136,6 @@ func main() {
 	defer conn.Close()
 
 	fmt.Println("Ingrese tiempo de espera entre órdenes en segundos: ")
-
 	fmt.Scanln(&t)
 	fmt.Println("Ingrese nombre de archivo csv retail(ejemplo: si es retail.csv usted escribe retail): ")
 	fmt.Scanln(&fx)
@@ -168,16 +165,23 @@ func main() {
 	}
 
 	var num int
+	tRec := time.Now()
 	num = 10
 	for num != 0 {
-		fmt.Println("Ingrese 1 para Realizar orden, 2 para realizar seguimiento, para finalizar 0: ")
-		fmt.Scanln(&num)
-		if num == 1 {
-			wg.Wait()
-			go DoOrder(allpyme, allretail, conn, t)
-			time.Sleep(3 * time.Second)
-		}
-		if num == 2 {
+		if tRec.Sub(time.Now()) < time.Duration(0) {
+			fmt.Println("Ingrese 1 para Realizar orden, 2 para realizar seguimiento, para finalizar 0: ")
+			fmt.Scanln(&num)
+			if num == 1 {
+				wg.Wait()
+				go DoOrder(allpyme, allretail, conn, t)
+				tRec = time.Now().Add(time.Millisecond * time.Duration(t))
+			}
+			if num == 2 {
+				wg.Wait()
+				go PideSegui(conn)
+			}
+		} else {
+			fmt.Println("Ingrese 1 para Realizar seguimiento o 0 para finalizar")
 			wg.Wait()
 			go PideSegui(conn)
 		}
