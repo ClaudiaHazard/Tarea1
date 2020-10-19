@@ -6,19 +6,20 @@ import (
 	"encoding/csv"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"strconv"
+	"sync"
 	"time"
-    "math/rand"
+
 	sm "github.com/ClaudiaHazard/Tarea1/ServicioMensajeria"
 	"google.golang.org/grpc"
-	"sync"
 )
 
 //IP local 10.6.40.163
 const (
-	//ipport = "10.6.40.162:50051"
-	ipport = ":50051"
+	ipport = "10.6.40.162:50051"
+	//ipport = ":50051"
 )
 
 //EnviaOrdenCliente de Cliente a Logistica
@@ -52,14 +53,14 @@ func EnviaCodCliente(conn *grpc.ClientConn, cod int32) string {
 }
 
 //IndividualOrder recibe una entrada del archic csv y la envía a logística
-func IndividualOrder(record []string,tipo string, c *grpc.ClientConn) int32{
+func IndividualOrder(record []string, tipo string, c *grpc.ClientConn) int32 {
 	var order [6]string
 	order[1] = record[0]
 	order[2] = record[1]
 	order[3] = record[2]
 	order[4] = record[3]
 	order[5] = record[4]
-	if (tipo=="retail"){
+	if tipo == "retail" {
 		order[0] = "retail"
 	} else {
 		if record[5] == "0" {
@@ -78,28 +79,28 @@ func IndividualOrder(record []string,tipo string, c *grpc.ClientConn) int32{
 
 	return rett
 
-} 
+}
 
 //DoOrder recibe todos los datos de los csv, seleccionando uno al azar dependiendo del tipo de cliente
-func DoOrder (pym [][]string,reta [][]string, c *grpc.ClientConn, m int) {
-	for { 
+func DoOrder(pym [][]string, reta [][]string, c *grpc.ClientConn, m int) {
+	for {
 		var tii string
 		fmt.Println("Ingrese tipo de cliente: ")
 		fmt.Scanln(&tii)
 		var ins []string
-		if tii=="retail"{
+		if tii == "retail" {
 			ins = reta[rand.Intn(len(reta)-2)+1]
-		}else{
+		} else {
 			ins = pym[rand.Intn(len(pym)-2)+1]
 		}
-		r :=IndividualOrder(ins,tii,c)
-		fmt.Println("Orden ingresada, este es su codigo de seguimiento: ",r)
-		 time.Sleep(time.Duration(m) * time.Second) 
+		r := IndividualOrder(ins, tii, c)
+		fmt.Println("Orden ingresada, este es su codigo de seguimiento: ", r)
+		time.Sleep(time.Duration(m) * time.Second)
 	}
 }
 
 //PideSegui solicita ifnormación de un pquete con su código de seguimiento
-func PideSegui(c *grpc.ClientConn){
+func PideSegui(c *grpc.ClientConn) {
 	for {
 		var codd int32
 		fmt.Println("Ingrese codigo de seguimiento: ")
@@ -134,7 +135,7 @@ func main() {
 	fx = fx + ".csv"
 	fmt.Println("Ingrese nombre de archivo pymes: ")
 	fmt.Scanln(&fx2)
-	fx2 = fx2 + ".csv"	
+	fx2 = fx2 + ".csv"
 	csvfile, err := os.Open(fx)
 	if err != nil {
 		log.Fatalln("Couldn't open the csv file", err)
@@ -142,9 +143,9 @@ func main() {
 	csvfile2, err2 := os.Open(fx2)
 	if err2 != nil {
 		log.Fatalln("Couldn't open the csv file", err)
-	}	
+	}
 	r := csv.NewReader(csvfile)
-	r2 :=csv.NewReader(csvfile2)
+	r2 := csv.NewReader(csvfile2)
 
 	allretail, err := r.ReadAll()
 	if err != nil {
@@ -154,10 +155,10 @@ func main() {
 	allpyme, err := r2.ReadAll()
 	if err != nil {
 		log.Fatal(err)
-	}	
+	}
 
 	wg.Add(1)
-	go DoOrder(allpyme,allretail,conn,t)
+	go DoOrder(allpyme, allretail, conn, t)
 	wg.Add(1)
 	go PideSegui(conn)
 
