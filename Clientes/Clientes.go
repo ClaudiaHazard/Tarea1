@@ -18,6 +18,7 @@ import (
 
 var wg sync.WaitGroup
 var mutex sync.Mutex
+var locks string
 
 //IP local 10.6.40.163
 const (
@@ -104,12 +105,12 @@ func DoOrder(pym [][]string, reta [][]string, c *grpc.ClientConn, m int) {
 	defer wg.Done()
 	var tii string
 	for {
-
+		locks="si"
 		fmt.Println("Ingrese tipo de cliente (retail o pyme): ")
 		fmt.Scanln(&tii)
 		wg.Add(1)
 		go Ordenar(tii, c, pym, reta)
-
+		locks="no"
 		time.Sleep(time.Duration(m) * time.Second)
 	}
 }
@@ -119,14 +120,16 @@ func PideSegui(c *grpc.ClientConn) {
 	defer wg.Done()
 	time.Sleep(5 * time.Second)
 	for {
-		var codd int32
-		fmt.Println("Ingrese codigo de seguimiento: ")
-		fmt.Scanln(&codd)
+		if locks!="si"{
+			var codd int32
+			fmt.Println("Ingrese codigo de seguimiento: ")
+			fmt.Scanln(&codd)
 
-		//envío y recepción de info de estado
-		info := EnviaCodCliente(c, codd)
-		//mostrar info
-		fmt.Println("Estado del paquete: ", info)
+			//envío y recepción de info de estado
+			info := EnviaCodCliente(c, codd)
+			//mostrar info
+			fmt.Println("Estado del paquete: ", info)
+		}
 	}
 }
 func main() {
@@ -137,6 +140,7 @@ func main() {
 	var fx2 string
 
 	conn, err2 := grpc.Dial(ipport, grpc.WithInsecure(), grpc.WithBlock())
+	locks ="si"
 
 	if err2 != nil {
 		log.Fatalf("did not connect: %s", err2)
