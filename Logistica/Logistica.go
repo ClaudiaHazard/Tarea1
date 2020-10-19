@@ -168,20 +168,20 @@ func ReporteFinanzas(pa *sm.Paquete, pa2 *sm.Paquete, conn *amqp.Connection) {
 		})
 	//log.Printf(" [x] Sent %s", body)
 	failOnError(err, "Failed to publish a message")
-
-	body2 := `{"ID":` + `"` + pa2.Id + `"` + `, "intentos" :` + strconv.Itoa(int(pa2.Intentos)) + `, "entregado":` + entre2 + `, "valor" :  ` + strconv.Itoa(int(pa2.Valor)) + `, "tipo": ` + `"` + pa2.Tipo + `"` + `}`
-	err = ch.Publish(
-		"",     // exchange
-		q.Name, // routing key
-		false,  // mandatory
-		false,  // immediate
-		amqp.Publishing{
-			ContentType: "application/json",
-			Body:        []byte(body2),
-		})
-	//log.Printf(" [x] Sent %s", body2)
-	failOnError(err, "Failed to publish a message")
-
+	if pa2.Id!=""{
+		body2 := `{"ID":` + `"` + pa2.Id + `"` + `, "intentos" :` + strconv.Itoa(int(pa2.Intentos)) + `, "entregado":` + entre2 + `, "valor" :  ` + strconv.Itoa(int(pa2.Valor)) + `, "tipo": ` + `"` + pa2.Tipo + `"` + `}`
+		err = ch.Publish(
+			"",     // exchange
+			q.Name, // routing key
+			false,  // mandatory
+			false,  // immediate
+			amqp.Publishing{
+				ContentType: "application/json",
+				Body:        []byte(body2),
+			})
+		//log.Printf(" [x] Sent %s", body2)
+		failOnError(err, "Failed to publish a message")		
+	}
 }
 
 //InformaEntrega Informaque camion termino entrega
@@ -280,7 +280,7 @@ func main() {
 	csvFile = CreaRegistro()
 
 	//Crea la conexion RabbitMQ
-	conn, err = amqp.Dial(ipportrabbitmq)
+	//conn, err := amqp.Dial(ipportrabbitmq)
 
 	//failOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
