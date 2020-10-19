@@ -88,7 +88,7 @@ func DoOrder(pym [][]string, reta [][]string, c *grpc.ClientConn, m int) {
 	defer wg.Done()
 	for {
 		var tii string
-		fmt.Println("Ingrese tipo de cliente: ")
+		fmt.Println("Ingrese tipo de cliente (retail o pyme): ")
 		fmt.Scanln(&tii)
 		var ins []string
 		if tii == "retail" {

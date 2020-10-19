@@ -188,13 +188,13 @@ func ReporteFinanzas(pa *sm.Paquete, pa2 *sm.Paquete, conn *amqp.Connection) {
 func (s *Server) InformaEntrega(ctx context.Context, in *sm.InformePaquetes) (*sm.Message, error) {
 
 	log.Printf("Entrega completada.")
-	//pa := in.Paquetes[0]
+	pa := in.Paquetes[0]
 
-	//pa2 := in.Paquetes[1]
+	pa2 := in.Paquetes[1]
 
 	//Aqui se debe enviar mensaje a Finanzas con los 2 paquetes para que calcule lo que deba calcular.
 
-	//ReporteFinanzas(pa, pa2, conn)
+	ReporteFinanzas(pa, pa2, conn)
 
 	return &sm.Message{Body: "Ok"}, nil
 }
@@ -232,7 +232,7 @@ func (s *Server) SolicitaSeguimiento(ctx context.Context, in *sm.CodSeguimiento)
 
 //CreaPaquete genera paquete de la orden que entrego el Cliente
 func CreaPaquete(o *sm.Orden) *sm.Paquete {
-	if o.Tipo == "Normal" || o.Tipo == "Prioritario" {
+	if o.Tipo == "normal" || o.Tipo == "prioritario" {
 		CodSeg = CodSeg + 1
 		return &sm.Paquete{Id: o.Id, CodigoSeguimiento: CodSeg, Tipo: o.Tipo, Valor: o.Valor, Intentos: 0, Estado: "En bodega", Origen: o.Origen, Destino: o.Destino, Nombre: o.Nombre}
 	}
