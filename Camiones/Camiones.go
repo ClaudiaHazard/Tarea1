@@ -61,6 +61,7 @@ func EntregaPaquete(te int) int {
 func ReintentaEntregar(paq *sm.Paquete) int {
 	if paq.Tipo == "retail" {
 		if paq.Intentos < 3 {
+			println("REINTENTA")
 			return 1
 		}
 		return 0
@@ -74,6 +75,7 @@ func ReintentaEntregar(paq *sm.Paquete) int {
 		}
 		ganancia = ganancia - float32(paq.Intentos+1)*10.0
 		if ganancia > 0 {
+			println("REINTENTA")
 			return 1
 		}
 		return 0

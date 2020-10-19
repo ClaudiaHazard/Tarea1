@@ -32,9 +32,9 @@ func EnviaOrdenCliente(conn *grpc.ClientConn, tip string, aidi string, pro strin
 	response, err2 := c.RealizaOrden(context.Background(), &sm.Orden{Id: aidi, Tipo: tip, Valor: val, Origen: tien, Destino: dest, Nombre: pro})
 
 	if err2 != nil {
-		log.Fatalf("Error al llamar EnviaOrden: %s", err2)
+		log.Fatalf("Error al llamar RealizaOrden: %s", err2)
 	}
-	log.Println("Orden registrada")
+	//log.Println("Orden registrada")
 
 	return response.CodigoSeguimiento
 }
@@ -93,11 +93,14 @@ func DoOrder(pym [][]string, reta [][]string, c *grpc.ClientConn, m int) {
 		var ins []string
 		if tii == "retail" {
 			ins = reta[rand.Intn(len(reta)-2)+1]
+			IndividualOrder(ins, tii, c)
+			fmt.Println("Orden ingresada")
 		} else {
 			ins = pym[rand.Intn(len(pym)-2)+1]
+			r := IndividualOrder(ins, tii, c)
+			fmt.Println("Orden ingresada, este es su codigo de seguimiento: ", r)
 		}
-		r := IndividualOrder(ins, tii, c)
-		fmt.Println("Orden ingresada, este es su codigo de seguimiento: ", r)
+
 		time.Sleep(time.Duration(m) * time.Second)
 	}
 }
