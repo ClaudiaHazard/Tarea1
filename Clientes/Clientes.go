@@ -86,6 +86,7 @@ func IndividualOrder(record []string, tipo string, c *grpc.ClientConn) int32 {
 
 //Ordenar realiza orden de un cliente.
 func Ordenar(tii string, c *grpc.ClientConn, pym [][]string, reta [][]string) {
+	defer wg.Done()
 	var ins []string
 	if tii == "retail" {
 		ins = reta[rand.Intn(len(reta)-2)+1]
@@ -106,6 +107,7 @@ func DoOrder(pym [][]string, reta [][]string, c *grpc.ClientConn, m int) {
 
 		fmt.Println("Ingrese tipo de cliente (retail o pyme): ")
 		fmt.Scanln(&tii)
+		wg.Add(1)
 		go Ordenar(tii, c, pym, reta)
 
 		time.Sleep(time.Duration(m) * time.Second)
