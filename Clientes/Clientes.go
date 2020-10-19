@@ -17,6 +17,7 @@ import (
 )
 
 var wg sync.WaitGroup
+var mutex sync.Mutex
 
 //IP local 10.6.40.163
 const (
@@ -83,23 +84,29 @@ func IndividualOrder(record []string, tipo string, c *grpc.ClientConn) int32 {
 
 }
 
+//Ordenar realiza orden de un cliente.
+func Ordenar(tii string, c *grpc.ClientConn, pym [][]string, reta [][]string) {
+	var ins []string
+	if tii == "retail" {
+		ins = reta[rand.Intn(len(reta)-2)+1]
+		IndividualOrder(ins, tii, c)
+		fmt.Println("Orden retail ingresada")
+	} else {
+		ins = pym[rand.Intn(len(pym)-2)+1]
+		r := IndividualOrder(ins, tii, c)
+		fmt.Printf("Orden pyme ingresada, este es su codigo de seguimiento: %d", r)
+	}
+}
+
 //DoOrder recibe todos los datos de los csv, seleccionando uno al azar dependiendo del tipo de cliente
 func DoOrder(pym [][]string, reta [][]string, c *grpc.ClientConn, m int) {
 	defer wg.Done()
+	var tii string
 	for {
-		var tii string
+
 		fmt.Println("Ingrese tipo de cliente (retail o pyme): ")
 		fmt.Scanln(&tii)
-		var ins []string
-		if tii == "retail" {
-			ins = reta[rand.Intn(len(reta)-2)+1]
-			IndividualOrder(ins, tii, c)
-			fmt.Println("Orden ingresada")
-		} else {
-			ins = pym[rand.Intn(len(pym)-2)+1]
-			r := IndividualOrder(ins, tii, c)
-			fmt.Println("Orden ingresada, este es su codigo de seguimiento: ", r)
-		}
+		go Ordenar(tii, c, pym, reta)
 
 		time.Sleep(time.Duration(m) * time.Second)
 	}
