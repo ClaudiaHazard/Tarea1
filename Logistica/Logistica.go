@@ -238,9 +238,9 @@ func (s *Server) SolicitaSeguimiento(ctx context.Context, in *sm.CodSeguimiento)
 func CreaPaquete(o *sm.Orden) *sm.Paquete {
 	if o.Tipo == "normal" || o.Tipo == "prioritario" {
 		CodSeg = CodSeg + 1
-		return &sm.Paquete{Id: o.Id, CodigoSeguimiento: CodSeg, Tipo: o.Tipo, Valor: o.Valor, Intentos: 0, Estado: "En bodega", Origen: o.Origen, Destino: o.Destino, Nombre: o.Nombre}
+		return &sm.Paquete{Id: o.Id, CodigoSeguimiento: CodSeg, Tipo: o.Tipo, Valor: o.Valor, Intentos: 1, Estado: "En bodega", Origen: o.Origen, Destino: o.Destino, Nombre: o.Nombre}
 	}
-	return &sm.Paquete{Id: o.Id, CodigoSeguimiento: 0, Tipo: o.Tipo, Valor: o.Valor, Intentos: 0, Estado: "En bodega", Origen: o.Origen, Destino: o.Destino, Nombre: o.Nombre}
+	return &sm.Paquete{Id: o.Id, CodigoSeguimiento: 0, Tipo: o.Tipo, Valor: o.Valor, Intentos: 1, Estado: "En bodega", Origen: o.Origen, Destino: o.Destino, Nombre: o.Nombre}
 }
 
 //CreaRegistro en el que escribira el camion.
