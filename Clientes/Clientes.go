@@ -6,7 +6,6 @@ import (
 	"encoding/csv"
 	"fmt"
 	"log"
-	"math/rand"
 	"os"
 	"strconv"
 	"sync"
@@ -20,25 +19,36 @@ var wg sync.WaitGroup
 var mutex sync.Mutex
 var locks string
 
+//AunExistenPaquetes Variable para determinar si quedan paquetes en los archivos csv.
+var AunExistenPaquetes bool
+
+//CountRetail variable que contiene la cantidad de paquetes leidos en el csv.
+var CountRetail int
+
+//CountPyme variable que contiene la cantidad de paquetes leidos en el csv.
+var CountPyme int
+
 //IP local 10.6.40.163
 const (
-	ipport = "10.6.40.162:50051"
-	//ipport = ":50051"
+	//ipport = "10.6.40.162:50051"
+	ipport = ":50051"
 )
 
 //EnviaOrdenCliente de Cliente a Logistica
-func EnviaOrdenCliente(conn *grpc.ClientConn, tip string, aidi string, pro string, val int32, tien string, dest string) int32 {
-
+func EnviaOrdenCliente(conn *grpc.ClientConn, ord *sm.Orden) {
 	c := sm.NewMensajeriaServiceClient(conn)
 
-	response, err2 := c.RealizaOrden(context.Background(), &sm.Orden{Id: aidi, Tipo: tip, Valor: val, Origen: tien, Destino: dest, Nombre: pro})
+	response, err2 := c.RealizaOrden(context.Background(), ord)
 
 	if err2 != nil {
 		log.Fatalf("Error al llamar RealizaOrden: %s", err2)
 	}
-	//log.Println("Orden registrada")
+	if response.CodigoSeguimiento == 0 {
+		log.Printf("Orden creada, usted no cuenta con numero de seguimiento\n")
+	} else {
+		log.Printf("Orden creada, su numero de seguimiento es: %d\n", response.CodigoSeguimiento)
+	}
 
-	return response.CodigoSeguimiento
 }
 
 //EnviaCodCliente cliente envia codigo de seguimiento
@@ -51,13 +61,17 @@ func EnviaCodCliente(conn *grpc.ClientConn, cod int32) string {
 	if err2 != nil {
 		log.Fatalf("Error al llamar EnviaOrden: %s", err2)
 	}
-	//log.Printf("Código de sguimiento: %s", response.Body)
+	if response.Estado == "" {
+		log.Printf("Su codigo %d no corresponde a ningun paquete enviado.", cod)
+	} else {
+		log.Printf("Su paquete con codigo %d, se encuentra en estado: %s", cod, response.Estado)
+	}
 
 	return response.Estado
 }
 
-//IndividualOrder recibe una entrada del archic csv y la envía a logística
-func IndividualOrder(record []string, tipo string, c *grpc.ClientConn) int32 {
+//GeneraOrdenFromString genera la orden del string del csv
+func GeneraOrdenFromString(record []string, tipo string) *sm.Orden {
 	var order [6]string
 	order[1] = record[0]
 	order[2] = record[1]
@@ -74,64 +88,50 @@ func IndividualOrder(record []string, tipo string, c *grpc.ClientConn) int32 {
 		}
 	}
 
-	co, err := strconv.ParseInt(order[3], 10, 32)
-	if err == nil {
-		fmt.Println(co)
-	}
-	ccc := int32(co)
-	rett := EnviaOrdenCliente(c, order[0], order[1], order[2], ccc, order[4], order[5])
+	val, _ := strconv.ParseInt(order[3], 10, 32)
 
-	return rett
+	return &sm.Orden{Id: order[1], Tipo: order[0], Valor: int32(val), Origen: order[4], Destino: order[5], Nombre: order[2]}
 
 }
 
-//Ordenar realiza orden de un cliente.
-func Ordenar(tii string, c *grpc.ClientConn, pym [][]string, reta [][]string) {
-
-	var ins []string
-	if tii == "retail" {
-		ins = reta[rand.Intn(len(reta)-2)+1]
-		IndividualOrder(ins, tii, c)
-		fmt.Println("Orden retail ingresada")
-	} else {
-		ins = pym[rand.Intn(len(pym)-2)+1]
-		r := IndividualOrder(ins, tii, c)
-		fmt.Printf("Orden pyme ingresada, este es su codigo de seguimiento: %d\n", r)
-	}
+func getValue(csv [][]string, count int) ([]string, int) {
+	defer mutex.Unlock()
+	mutex.Lock()
+	val := csv[count]
+	count = count + 1
+	return val, count
 }
 
-//DoOrder recibe todos los datos de los csv, seleccionando uno al azar dependiendo del tipo de cliente
-func DoOrder(pym [][]string, reta [][]string, c *grpc.ClientConn, m int) {
-	defer wg.Done()
-	var tii string
-	for {
-		locks="si"
-		fmt.Println("Ingrese tipo de cliente (retail o pyme): ")
-		fmt.Scanln(&tii)
-		wg.Add(1)
-		go Ordenar(tii, c, pym, reta)
-		locks="no"
-		time.Sleep(time.Duration(m) * time.Second)
+//CreaOrdenTipo Crea orden del documento Pyme o Retail
+func CreaOrdenTipo(tipo string, conn *grpc.ClientConn, CsvPyme [][]string, CsvRetail [][]string) {
+	var ordCsv []string
+	if tipo == "retail" {
+		if len(CsvRetail) > CountRetail {
+			ordCsv, CountRetail = getValue(CsvRetail, CountRetail)
+			ord := GeneraOrdenFromString(ordCsv, "retail")
+			EnviaOrdenCliente(conn, ord)
+			log.Printf("ContadorOrdenes Retail: %d\n", CountRetail)
+
+		} else {
+			fmt.Println("No quedan mas paquetes en el archivo csv de Retail")
+		}
+
 	}
-}
-
-//PideSegui solicita ifnormación de un pquete con su código de seguimiento
-func PideSegui(c *grpc.ClientConn) {
-	defer wg.Done()
-	time.Sleep(5 * time.Second)
-	for {
-		if locks!="si"{
-			var codd int32
-			fmt.Println("Ingrese codigo de seguimiento: ")
-			fmt.Scanln(&codd)
-
-			//envío y recepción de info de estado
-			info := EnviaCodCliente(c, codd)
-			//mostrar info
-			fmt.Println("Estado del paquete: ", info)
+	if tipo == "pyme" {
+		if len(CsvPyme) > CountPyme {
+			mutex.Lock()
+			ordCsv = CsvPyme[CountPyme]
+			ord := GeneraOrdenFromString(ordCsv, "pyme")
+			CountPyme = CountPyme + 1
+			mutex.Unlock()
+			EnviaOrdenCliente(conn, ord)
+			log.Printf("ContadorOrdenes Pyme: %d\n", CountPyme)
+		} else {
+			fmt.Println("No quedan mas paquetes en el archivo csv de Pymes")
 		}
 	}
 }
+
 func main() {
 
 	var conn *grpc.ClientConn
@@ -140,7 +140,7 @@ func main() {
 	var fx2 string
 
 	conn, err2 := grpc.Dial(ipport, grpc.WithInsecure(), grpc.WithBlock())
-	locks ="si"
+	locks = "si"
 
 	if err2 != nil {
 		log.Fatalf("did not connect: %s", err2)
@@ -158,11 +158,11 @@ func main() {
 	fx2 = fx2 + ".csv"
 	csvfile, err := os.Open(fx)
 	if err != nil {
-		log.Fatalln("Couldn't open the csv file", err)
+		log.Fatalln("No se pudo abrir el archivo csv ", err)
 	}
 	csvfile2, err2 := os.Open(fx2)
 	if err2 != nil {
-		log.Fatalln("Couldn't open the csv file", err)
+		log.Fatalln("No se pudo abrir el archivo csv", err)
 	}
 	r := csv.NewReader(csvfile)
 	r2 := csv.NewReader(csvfile2)
@@ -177,10 +177,37 @@ func main() {
 		log.Fatal(err)
 	}
 
-	wg.Add(1)
-	go DoOrder(allpyme, allretail, conn, t)
-	wg.Add(1)
-	go PideSegui(conn)
+	CountPyme = 1
+	CountRetail = 1
+	AunExistenPaquetes = true
 
-	wg.Wait()
+	var tipo string
+	var cod int32
+	tOrden := time.Now()
+
+	for AunExistenPaquetes {
+		for tipo != "retail" && tipo != "pyme" {
+			time.Sleep(1 * time.Second)
+			fmt.Println("Ingrese tipo de cliente (retail o pyme): ")
+			fmt.Scanln(&tipo)
+			if tipo != "retail" && tipo != "pyme" {
+				fmt.Println("Valor erroneo")
+			} else {
+				go CreaOrdenTipo(tipo, conn, allretail, allpyme)
+				tOrden = time.Now().Add(time.Millisecond * time.Duration(t))
+			}
+
+		}
+		for tOrden.Sub(time.Now()) > time.Duration(0) {
+			time.Sleep(1 * time.Second)
+			fmt.Println("Ingrese codigo de seguimiento: ")
+			fmt.Scanln(&cod)
+			if cod != 0 {
+				go EnviaCodCliente(conn, cod)
+			} else {
+				fmt.Println("No existe registro de ese codigo de seguimiento")
+			}
+		}
+		tipo = ""
+	}
 }

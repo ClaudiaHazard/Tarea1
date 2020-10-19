@@ -19,8 +19,8 @@ import (
 
 //IP local 10.6.40.162
 const (
-	ipportgrpc = "10.6.40.162:50051"
-	//ipportgrpc = ":50051"
+	//ipportgrpc = "10.6.40.162:50051"
+	ipportgrpc     = ":50051"
 	ipportrabbitmq = "amqp://test:test@10.6.40.162:5672/"
 	//ipportrabbitmq = "amqp://guest:guest@localhost:5672/"
 )
@@ -186,13 +186,14 @@ func ReporteFinanzas(pa *sm.Paquete, pa2 *sm.Paquete, conn *amqp.Connection) {
 func (s *Server) InformaEntrega(ctx context.Context, in *sm.InformePaquetes) (*sm.Message, error) {
 
 	log.Printf("Entrega completada.")
-	pa := in.Paquetes[0]
+	//Esto puede ser vacio ver que pasa ahi
+	//pa := in.Paquetes[0]
 
-	pa2 := in.Paquetes[1]
+	//pa2 := in.Paquetes[1]
 
 	//Aqui se debe enviar mensaje a Finanzas con los 2 paquetes para que calcule lo que deba calcular.
 
-	ReporteFinanzas(pa, pa2, conn)
+	//ReporteFinanzas(pa, pa2, conn)
 
 	return &sm.Message{Body: "Ok"}, nil
 }
@@ -278,9 +279,9 @@ func main() {
 	csvFile = CreaRegistro()
 
 	//Crea la conexion RabbitMQ
-	conn, err = amqp.Dial(ipportrabbitmq)
-
+	//conn, err = amqp.Dial(ipportrabbitmq)
 	//failOnError(err, "Failed to connect to RabbitMQ")
+
 	defer conn.Close()
 
 	//Inicializa el codigo de seguimiento

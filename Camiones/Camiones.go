@@ -21,8 +21,8 @@ var wg sync.WaitGroup
 
 //IP local 10.6.40.161
 const (
-	ipport = "10.6.40.162:50051"
-	//ipport = ":50051"
+	//ipport = "10.6.40.162:50051"
+	ipport = ":50051"
 )
 
 //Paquete Estructura del paquete a recibir.Tipo: retail, normal, prioritario. Estado: En bodega, en camino, recibido, no recibido.
@@ -351,7 +351,7 @@ func EditaResigtro(cam *Camion, csvFile *os.File) {
 	defer csvwriter.Flush()
 	val := []string{cam.paq1.Id, cam.paq1.Tipo, strconv.Itoa(int(cam.paq1.Valor)), cam.paq1.Origen, cam.paq1.Destino, strconv.Itoa(int(cam.paq1.Intentos)), cam.fechaEntrega1}
 	csvwriter.Write(val)
-	if (cam.paq2 != &sm.Paquete{}) {
+	if (cam.paq2 != &sm.Paquete{} && cam.paq2.Id != "") {
 		val = []string{cam.paq2.Id, cam.paq2.Tipo, strconv.Itoa(int(cam.paq2.Valor)), cam.paq2.Origen, cam.paq2.Destino, strconv.Itoa(int(cam.paq2.Intentos)), cam.fechaEntrega2}
 		csvwriter.Write(val)
 	}
@@ -363,10 +363,10 @@ func main() {
 	var te int
 
 	fmt.Println("Ingrese duración de espera por segunda orden en milisegundos: ")
-	fmt.Scanln(&ti)
+	fmt.Scan(&ti)
 
 	fmt.Println("Ingrese duración de entrega por paquete en milisegundos: ")
-	fmt.Scanln(&te)
+	fmt.Scan(&te)
 
 	//Se crea la conexion con el servidor Logistica
 	conn, err := grpc.Dial(ipport, grpc.WithInsecure(), grpc.WithBlock())

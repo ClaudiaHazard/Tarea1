@@ -1,21 +1,16 @@
 timestamp,id-paquete,tipo,nombre,valor,origen,destino,seguimiento
-2020-10-18 21:43:56,SA1554KF,retail,Polera,10,tienda-A,casa-A,0
-2020-10-18 21:43:57,SA1684AH,retail,Pantalón,12,tienda-B,casa-B,0
-2020-10-18 21:43:58,SA5698PO,retail,Televisor,110,tienda-C,casa-C,0
-2020-10-18 21:43:59,SA5897AS,retail,Consola de Videojuegos,95,tienda-A,casa-D,0
-2020-10-18 21:44:00,SA1589GD,retail,Lavadora,100,tienda-B,casa-Q,0
-2020-10-18 21:44:01,SA8859SS,retail,Polerón,15,tienda-C,casa-A,0
-2020-10-18 21:44:02,SA5713AS,retail,Parca,20,tienda-B,casa-C,0
-2020-10-18 21:44:03,SA2589TR,retail,Pelota,5,tienda-C,casa-P,0
-2020-10-18 21:44:04,SA1597EF,retail,Raqueta,20,tienda-A,casa-F,0
-2020-10-18 21:44:05,SA3574FG,retail,Refrigerador,120,tienda-B,casa-U,0
-2020-10-18 21:44:06,SA3698HJ,retail,Tostador,25,tienda-C,casa-A,0
-2020-10-18 21:44:07,SA2563AS,retail,Perfume,15,tienda-A,casa-N,0
-2020-10-18 21:44:08,SA1937JH,retail,Tobillera,6,tienda-C,casa-N,0
-2020-10-18 21:44:09,SA5648AA,retail,Notebook,80,tienda-B,casa-A,0
-2020-10-18 21:44:10,SA6947GH,retail,Set de ollas,50,tienda-C,casa-C,0
-2020-10-18 21:44:11,SA5588HJ,retail,Parlante,25,tienda-C,casa-E,0
-2020-10-18 21:44:12,SA6644DS,retail,Lampara,30,tienda-A,casa-A,0
-2020-10-18 21:44:13,SA5974AA,retail,Sillón,105,tienda-C,casa-C,0
-2020-10-18 21:44:14,SA2596NH,retail,Mesa,90,tienda-A,casa-S,0
-2020-10-18 21:44:15,SA7748JK,retail,Cama,115,tienda-B,casa-A,0
+2020-10-19 15:45:27,BE127,retail,Secador de pelo,15,pyme,casa-K,0
+2020-10-19 15:55:36,BE127,retail,Secador de pelo,15,pyme,casa-K,0
+2020-10-19 15:55:46,BE666,retail,Jabón para la ducha,8,pyme,casa-A,0
+2020-10-19 15:57:00,BE127,retail,Secador de pelo,15,pyme,casa-K,0
+2020-10-19 15:58:08,BE127,retail,Secador de pelo,15,pyme,casa-K,0
+2020-10-19 15:58:24,BE666,retail,Jabón para la ducha,8,pyme,casa-A,0
+2020-10-19 15:58:52,BE855,retail,Acondicionador,10,pyme,casa-A,0
+2020-10-19 15:59:00,BE654,retail,Shampoo,10,pyme,casa-D,0
+2020-10-19 16:02:33,BE127,retail,Secador de pelo,15,pyme,casa-K,0
+2020-10-19 16:03:31,BE127,retail,Secador de pelo,15,pyme,casa-K,0
+2020-10-19 16:03:57,BE666,retail,Jabón para la ducha,8,pyme,casa-A,0
+2020-10-19 16:05:00,BE127,retail,Secador de pelo,15,pyme,casa-K,0
+2020-10-19 16:05:48,BE127,retail,Secador de pelo,15,pyme,casa-K,0
+2020-10-19 16:05:55,BE666,retail,Jabón para la ducha,8,pyme,casa-A,0
+2020-10-19 16:06:04,BE855,retail,Acondicionador,10,pyme,casa-A,0
