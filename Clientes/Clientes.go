@@ -105,6 +105,7 @@ func DoOrder(pym [][]string, reta [][]string, c *grpc.ClientConn, m int) {
 //PideSegui solicita ifnormación de un pquete con su código de seguimiento
 func PideSegui(c *grpc.ClientConn) {
 	defer wg.Done()
+	time.Sleep(5 * time.Second)
 	for {
 		var codd int32
 		fmt.Println("Ingrese codigo de seguimiento: ")
