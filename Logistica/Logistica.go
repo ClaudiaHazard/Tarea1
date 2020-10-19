@@ -19,8 +19,8 @@ import (
 
 //IP local 10.6.40.162
 const (
-	//ipportgrpc = "10.6.40.162:50051"
-	ipportgrpc     = ":50051"
+	ipportgrpc = "10.6.40.162:50051"
+	//ipportgrpc     = ":50051"
 	ipportrabbitmq = "amqp://test:test@10.6.40.162:5672/"
 	//ipportrabbitmq = "amqp://guest:guest@localhost:5672/"
 )
@@ -120,7 +120,10 @@ func AsignaPaquete(s *Server, tipoCam string, entrPrevRetail bool, paqCargRetail
 
 //EntregaPosicion Entrega actualizacion de paquete
 func (s *Server) EntregaPosicion(ctx context.Context, in *sm.InformacionPaquete) (*sm.Message, error) {
-	log.Printf("Recibido estado con codigo de seguimiento: %d", in.CodigoSeguimiento)
+	if in.CodigoSeguimiento != 0 {
+		log.Printf("Recibido estado del paquete en camion con codigo de seguimiento: %d", in.CodigoSeguimiento)
+	}
+
 	s.Seguimiento[in.CodigoSeguimiento] = in.Estado
 	return &sm.Message{Body: "Ok"}, nil
 }
@@ -186,14 +189,14 @@ func ReporteFinanzas(pa *sm.Paquete, pa2 *sm.Paquete, conn *amqp.Connection) {
 func (s *Server) InformaEntrega(ctx context.Context, in *sm.InformePaquetes) (*sm.Message, error) {
 
 	log.Printf("Entrega completada.")
-	//Esto puede ser vacio ver que pasa ahi
-	//pa := in.Paquetes[0]
 
-	//pa2 := in.Paquetes[1]
+	pa := in.Paquetes[0]
 
-	//Aqui se debe enviar mensaje a Finanzas con los 2 paquetes para que calcule lo que deba calcular.
+	pa2 := in.Paquetes[1]
 
-	//ReporteFinanzas(pa, pa2, conn)
+	//Se envia reporte de los paquetes a finanzas
+
+	ReporteFinanzas(pa, pa2, conn)
 
 	return &sm.Message{Body: "Ok"}, nil
 }
@@ -213,7 +216,8 @@ func (s *Server) RealizaOrden(ctx context.Context, in *sm.Orden) (*sm.CodSeguimi
 	log.Printf("Se recibio paquete %s con Id: %s", in.Nombre, in.Id)
 
 	paq := CreaPaquete(in)
-
+	log.Printf("Codigo del paquete: %d", paq.CodigoSeguimiento)
+	s.Seguimiento[paq.CodigoSeguimiento] = paq.Estado
 	AgregaACola(paq, s)
 
 	//Agrega datos de la orden al registro
@@ -225,7 +229,8 @@ func (s *Server) RealizaOrden(ctx context.Context, in *sm.Orden) (*sm.CodSeguimi
 
 //SolicitaSeguimiento solicita estado de su orden
 func (s *Server) SolicitaSeguimiento(ctx context.Context, in *sm.CodSeguimiento) (*sm.Estado, error) {
-	log.Printf("Se envia el estado del paquete con codigode seguimiento: %d", in.CodigoSeguimiento)
+	log.Printf("Se envia el estado del paquete con codigo de seguimiento: %d", in.CodigoSeguimiento)
+	log.Printf("Estado: %s", s.Seguimiento[in.CodigoSeguimiento])
 	return &sm.Estado{Estado: s.Seguimiento[in.CodigoSeguimiento]}, nil
 }
 
@@ -279,8 +284,8 @@ func main() {
 	csvFile = CreaRegistro()
 
 	//Crea la conexion RabbitMQ
-	//conn, err = amqp.Dial(ipportrabbitmq)
-	//failOnError(err, "Failed to connect to RabbitMQ")
+	conn, err = amqp.Dial(ipportrabbitmq)
+	failOnError(err, "Failed to connect to RabbitMQ")
 
 	defer conn.Close()
 

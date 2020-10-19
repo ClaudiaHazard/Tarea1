@@ -21,8 +21,8 @@ var wg sync.WaitGroup
 
 //IP local 10.6.40.161
 const (
-	//ipport = "10.6.40.162:50051"
-	ipport = ":50051"
+	ipport = "10.6.40.162:50051"
+	//ipport = ":50051"
 )
 
 //Paquete Estructura del paquete a recibir.Tipo: retail, normal, prioritario. Estado: En bodega, en camino, recibido, no recibido.
@@ -48,7 +48,7 @@ type CamionResp struct {
 
 //EntregaPaquete intenta entregar paquete.
 func EntregaPaquete(te int) int {
-	time.Sleep(time.Duration(te) * time.Millisecond)
+	time.Sleep(time.Duration(te) * time.Second)
 	c := rand.Float64()
 	if c < 0.8 {
 		return 1
@@ -117,12 +117,14 @@ func CamionEntregaPaquetes(cam *Camion, conn *grpc.ClientConn, te int) {
 			r2, t2 = IntentaEntregar(cam.paq2, conn, ready2, te)
 
 			if r1 == 1 && ready != true {
+				log.Printf("Estado paq1 Recibido")
 				cam.paq1.Estado = "Recibido"
 				cam.fechaEntrega1 = t1
 				ready = true
 
 			}
 			if r2 == 1 && ready2 != true {
+
 				cam.paq2.Estado = "Recibido"
 				cam.fechaEntrega2 = t2
 				ready2 = true
@@ -210,7 +212,7 @@ func InformaPaqueteLogistica(conn *grpc.ClientConn, cam *Camion) string {
 func EntregaPosicionEntregaActual(conn *grpc.ClientConn, paq *sm.Paquete) string {
 	c := sm.NewMensajeriaServiceClient(conn)
 	ctx := context.Background()
-
+	log.Printf("Estado paq: %s, CodSeguimiento: %d", paq.Estado, paq.CodigoSeguimiento)
 	response, err := c.EntregaPosicion(ctx, &sm.InformacionPaquete{CodigoSeguimiento: paq.CodigoSeguimiento, Estado: paq.Estado})
 	if err != nil {
 		log.Fatalf("Error al llamar EntregaPosicion: %s", err)
@@ -224,7 +226,9 @@ func EntregaPosicionEntregaActual(conn *grpc.ClientConn, paq *sm.Paquete) string
 func CamionDisponible(conn *grpc.ClientConn, cam *Camion) *sm.Paquete {
 	c := sm.NewMensajeriaServiceClient(conn)
 	ctx := context.Background()
+
 	response, err := c.RecibeInstrucciones(ctx, &sm.DisponibleCamion{Id: cam.id, Tipo: cam.tipo, EntrPrevRetail: cam.EntrPrevRetail, PaqCargRetail: cam.PaqCargRetail})
+
 	if !cam.PaqCargRetail && cam.tipo == "Retail" && cam.PaqCargRetail == false {
 		cam.PaqCargRetail = true
 	}
@@ -280,7 +284,7 @@ func CamionEspera(cam *Camion, conn *grpc.ClientConn, ti int, te int) {
 		log.Printf("Camion %d en espera de paquete", cam.id)
 		for ComparaPaquete(cam.paq1, EmptyPaq) {
 			cam.paq1 = CamionDisponible(conn, cam)
-			tRec = time.Now().Add(time.Millisecond * time.Duration(ti))
+			tRec = time.Now().Add(time.Second * time.Duration(ti))
 		}
 		log.Printf("Camion %d recibe paquete 1, espera por paquete 2.", cam.id)
 		for ComparaPaquete(cam.paq2, EmptyPaq) && (tRec.Sub(time.Now()) > time.Duration(0)) {
@@ -300,6 +304,7 @@ func CamionEspera(cam *Camion, conn *grpc.ClientConn, ti int, te int) {
 		CamionEntregaPaquetes(cam, conn, te)
 		//Si vuelve a central y los paquetes no cambiaron su estado a recibido, el paquete no fue entregado.
 		if cam.paq1.Estado == "En Camino" {
+			log.Printf("Estado paq1 no recibido")
 			cam.paq1.Estado = "No Recibido"
 		}
 		if cam.paq2.Estado == "En Camino" {
@@ -362,10 +367,10 @@ func main() {
 	var ti int
 	var te int
 
-	fmt.Println("Ingrese duración de espera por segunda orden en milisegundos: ")
+	fmt.Println("Ingrese duración de espera por segunda orden en segundos: ")
 	fmt.Scan(&ti)
 
-	fmt.Println("Ingrese duración de entrega por paquete en milisegundos: ")
+	fmt.Println("Ingrese duración de entrega por paquete en segundos: ")
 	fmt.Scan(&te)
 
 	//Se crea la conexion con el servidor Logistica

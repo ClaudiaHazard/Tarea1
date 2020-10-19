@@ -30,8 +30,8 @@ var CountPyme int
 
 //IP local 10.6.40.163
 const (
-	//ipport = "10.6.40.162:50051"
-	ipport = ":50051"
+	ipport = "10.6.40.162:50051"
+	//ipport = ":50051"
 )
 
 //EnviaOrdenCliente de Cliente a Logistica
@@ -77,7 +77,7 @@ func GeneraOrdenFromString(record []string, tipo string) *sm.Orden {
 	order[2] = record[1]
 	order[3] = record[2]
 	order[4] = record[3]
-	order[5] = record [4]
+	order[5] = record[4]
 	if tipo == "retail" {
 		order[0] = "retail"
 	} else {
@@ -110,7 +110,7 @@ func CreaOrdenTipo(tipo string, conn *grpc.ClientConn, CsvPyme [][]string, CsvRe
 			ordCsv, CountRetail = getValue(CsvRetail, CountRetail)
 			ord := GeneraOrdenFromString(ordCsv, "retail")
 			EnviaOrdenCliente(conn, ord)
-			log.Printf("ContadorOrdenes Retail: %d\n", CountRetail)
+			log.Printf("ContadorOrdenes Retail: %d\n", CountRetail-1)
 
 		} else {
 			fmt.Println("No quedan mas paquetes en el archivo csv de Retail")
@@ -184,9 +184,10 @@ func main() {
 	var tipo string
 	var cod int32
 	tOrden := time.Now()
+	tmax := time.Now()
 
 	for AunExistenPaquetes {
-		for tipo != "retail" && tipo != "pyme" {
+		for tipo != "retail" && tipo != "pyme" || tmax.Sub(time.Now()) > time.Duration(0) {
 			time.Sleep(1 * time.Second)
 			fmt.Println("Ingrese tipo de cliente (retail o pyme): ")
 			fmt.Scanln(&tipo)
@@ -207,7 +208,9 @@ func main() {
 			} else {
 				fmt.Println("No existe registro de ese codigo de seguimiento")
 			}
+
 		}
+		cod = 0
 		tipo = ""
 	}
 }

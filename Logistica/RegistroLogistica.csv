@@ -1,16 +1,6 @@
 timestamp,id-paquete,tipo,nombre,valor,origen,destino,seguimiento
-2020-10-19 15:45:27,BE127,retail,Secador de pelo,15,pyme,casa-K,0
-2020-10-19 15:55:36,BE127,retail,Secador de pelo,15,pyme,casa-K,0
-2020-10-19 15:55:46,BE666,retail,Jabón para la ducha,8,pyme,casa-A,0
-2020-10-19 15:57:00,BE127,retail,Secador de pelo,15,pyme,casa-K,0
-2020-10-19 15:58:08,BE127,retail,Secador de pelo,15,pyme,casa-K,0
-2020-10-19 15:58:24,BE666,retail,Jabón para la ducha,8,pyme,casa-A,0
-2020-10-19 15:58:52,BE855,retail,Acondicionador,10,pyme,casa-A,0
-2020-10-19 15:59:00,BE654,retail,Shampoo,10,pyme,casa-D,0
-2020-10-19 16:02:33,BE127,retail,Secador de pelo,15,pyme,casa-K,0
-2020-10-19 16:03:31,BE127,retail,Secador de pelo,15,pyme,casa-K,0
-2020-10-19 16:03:57,BE666,retail,Jabón para la ducha,8,pyme,casa-A,0
-2020-10-19 16:05:00,BE127,retail,Secador de pelo,15,pyme,casa-K,0
-2020-10-19 16:05:48,BE127,retail,Secador de pelo,15,pyme,casa-K,0
-2020-10-19 16:05:55,BE666,retail,Jabón para la ducha,8,pyme,casa-A,0
-2020-10-19 16:06:04,BE855,retail,Acondicionador,10,pyme,casa-A,0
+2020-10-19 19:49:46,SA1554KF,retail,Polera,10,tienda-A,casa-A,0
+2020-10-19 19:49:55,BE127,prioritario,Secador de pelo,15,pyme,casa-K,10001
+2020-10-19 19:50:10,SA1684AH,retail,Pantalón,12,tienda-B,casa-B,0
+2020-10-19 19:50:21,SA5698PO,retail,Televisor,110,tienda-C,casa-C,0
+2020-10-19 19:50:37,BE666,prioritario,Jabón para la ducha,8,pyme,casa-A,10002
