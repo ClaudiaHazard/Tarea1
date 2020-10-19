@@ -1,0 +1,11 @@
+id-paquete,tipo,valor,origen,destino,intentos,fecha-entrega
+SA1684AH,retail,12,tienda-B,casa-B,0,2020-10-18 21:44:13
+SA5698PO,retail,110,tienda-C,casa-C,0,0
+SA1589GD,retail,100,tienda-B,casa-Q,0,2020-10-18 21:44:19
+SA5713AS,retail,20,tienda-B,casa-C,0,2020-10-18 21:44:24
+SA1597EF,retail,20,tienda-A,casa-F,0,2020-10-18 21:44:34
+SA3698HJ,retail,25,tienda-C,casa-A,0,2020-10-18 21:44:29
+SA1937JH,retail,6,tienda-C,casa-N,0,2020-10-18 21:44:45
+SA5648AA,retail,80,tienda-B,casa-A,0,2020-10-18 21:44:40
+SA6644DS,retail,30,tienda-A,casa-A,0,2020-10-18 21:44:55
+SA5974AA,retail,105,tienda-C,casa-C,0,2020-10-18 21:44:50

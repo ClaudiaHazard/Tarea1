@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/streadway/amqp"
@@ -42,6 +43,7 @@ var CodSeg int32
 var conn *amqp.Connection
 var err error
 var csvFile *os.File
+var mutex sync.Mutex
 
 //Server datos
 type Server struct {
@@ -50,20 +52,22 @@ type Server struct {
 	arrPrioritario []*sm.Paquete
 	arrNormal      []*sm.Paquete
 	Seguimiento    map[int32]string
+	mux            *sync.Mutex
 }
 
 //AgregaACola agrega paquete a cola correspondiente
 func AgregaACola(p *sm.Paquete, s *Server) {
 
-	if p.Tipo == "Retail" {
+	if p.Tipo == "retail" {
 		s.arrRetail = append(s.arrRetail, p)
 	}
-	if p.Tipo == "Prioritario" {
+	if p.Tipo == "prioritario" {
 		s.arrPrioritario = append(s.arrPrioritario, p)
 	}
-	if p.Tipo == "Retail" {
+	if p.Tipo == "normal" {
 		s.arrNormal = append(s.arrNormal, p)
 	}
+
 }
 
 //BorrarElemento borra el elemento en la posicion pos.
@@ -76,16 +80,21 @@ func BorrarElemento(arr []*sm.Paquete, pos int) []*sm.Paquete {
 
 //AsignaPaquete asigna paquete al tipo de camion correspondiente.
 func AsignaPaquete(s *Server, tipoCam string, entrPrevRetail bool, paqCargRetail bool) *sm.Paquete {
+	defer s.mux.Unlock()
+	s.mux.Lock()
 	if tipoCam == "Normal" {
 		if len(s.arrPrioritario) != 0 {
 			p := s.arrPrioritario[0]
 			s.arrPrioritario = BorrarElemento(s.arrPrioritario, 0)
+
 			return p
 		} else if len(s.arrNormal) != 0 {
 			p := s.arrNormal[0]
 			s.arrNormal = BorrarElemento(s.arrNormal, 0)
+
 			return p
 		} else {
+
 			return &sm.Paquete{}
 		}
 	}
@@ -93,15 +102,19 @@ func AsignaPaquete(s *Server, tipoCam string, entrPrevRetail bool, paqCargRetail
 		if len(s.arrRetail) != 0 {
 			p := s.arrRetail[0]
 			s.arrRetail = BorrarElemento(s.arrRetail, 0)
+
 			return p
 		} else if len(s.arrPrioritario) != 0 && entrPrevRetail && paqCargRetail {
 			p := s.arrPrioritario[0]
 			s.arrPrioritario = BorrarElemento(s.arrPrioritario, 0)
+
 			return p
 		} else {
+
 			return &sm.Paquete{}
 		}
 	}
+
 	return &sm.Paquete{}
 }
 
@@ -175,21 +188,24 @@ func ReporteFinanzas(pa *sm.Paquete, pa2 *sm.Paquete, conn *amqp.Connection) {
 func (s *Server) InformaEntrega(ctx context.Context, in *sm.InformePaquetes) (*sm.Message, error) {
 
 	log.Printf("Entrega completada.")
-	pa := in.Paquetes[0]
+	//pa := in.Paquetes[0]
 
-	pa2 := in.Paquetes[1]
+	//pa2 := in.Paquetes[1]
 
 	//Aqui se debe enviar mensaje a Finanzas con los 2 paquetes para que calcule lo que deba calcular.
 
-	ReporteFinanzas(pa, pa2, conn)
+	//ReporteFinanzas(pa, pa2, conn)
 
 	return &sm.Message{Body: "Ok"}, nil
 }
 
 //RecibeInstrucciones Camion avisa que esta disponible y se le envia paquete
 func (s *Server) RecibeInstrucciones(ctx context.Context, in *sm.DisponibleCamion) (*sm.Paquete, error) {
-	log.Printf("El Camion %d se encuentra disponible.", in.Id)
+	//log.Printf("El Camion %d se encuentra disponible.", in.Id)
+	//s.mux.Lock()
 	paq := AsignaPaquete(s, in.Tipo, in.EntrPrevRetail, in.PaqCargRetail)
+	//s.mux.Unlock()
+
 	return paq, nil
 }
 
@@ -198,10 +214,11 @@ func (s *Server) RealizaOrden(ctx context.Context, in *sm.Orden) (*sm.CodSeguimi
 	log.Printf("Se recibio paquete %s con Id: %s", in.Nombre, in.Id)
 
 	paq := CreaPaquete(in)
+
 	AgregaACola(paq, s)
 
 	//Agrega datos de la orden al registro
-	EditaResigtro(csvFile, in, paq.CodigoSeguimiento)
+	EditaResigtro(in, paq.CodigoSeguimiento)
 
 	return &sm.CodSeguimiento{CodigoSeguimiento: paq.CodigoSeguimiento}, nil
 
@@ -240,8 +257,10 @@ func CreaRegistro() *os.File {
 }
 
 //EditaResigtro agrega registro del camion a el csv file.
-func EditaResigtro(csvFile *os.File, o *sm.Orden, nSeg int32) {
+func EditaResigtro(o *sm.Orden, nSeg int32) {
+
 	csvwriter := csv.NewWriter(csvFile)
+	defer csvwriter.Flush()
 	val := []string{time.Now().Format("2006-01-02 15:04:05"), o.Id, o.Tipo, o.Nombre, strconv.Itoa(int(o.Valor)), o.Origen, o.Destino, strconv.Itoa(int(nSeg))}
 	csvwriter.Write(val)
 }
@@ -255,15 +274,15 @@ func main() {
 		log.Fatalf("Failed to listen on "+ipportgrpc+": %v", err)
 	}
 
-	s := Server{"1", []*sm.Paquete{}, []*sm.Paquete{}, []*sm.Paquete{}, make(map[int32]string)}
+	s := Server{"1", []*sm.Paquete{}, []*sm.Paquete{}, []*sm.Paquete{}, make(map[int32]string), &sync.Mutex{}}
 
 	//Crea el archivo de registro de logistica
-	CreaRegistro()
+	csvFile = CreaRegistro()
 
 	//Crea la conexion RabbitMQ
-	conn, err := amqp.Dial(ipportrabbitmq)
+	//conn, err := amqp.Dial(ipportrabbitmq)
 
-	failOnError(err, "Failed to connect to RabbitMQ")
+	//failOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
 
 	//Inicializa el codigo de seguimiento

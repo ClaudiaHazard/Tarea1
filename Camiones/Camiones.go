@@ -12,6 +12,7 @@ import (
 	"time"
 
 	sm "github.com/ClaudiaHazard/Tarea1/ServicioMensajeria"
+
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -58,7 +59,7 @@ func EntregaPaquete(te int) int {
 
 //ReintentaEntregar si es retail y ha intentado menos de 3 se puede reintentar, si es pyme depende del coste del producto y es a lo mas 2 reintentos.
 func ReintentaEntregar(paq *sm.Paquete) int {
-	if paq.Tipo == "Retail" {
+	if paq.Tipo == "retail" {
 		if paq.Intentos < 3 {
 			return 1
 		}
@@ -68,7 +69,7 @@ func ReintentaEntregar(paq *sm.Paquete) int {
 	if paq.Intentos < 2 {
 
 		ganancia := float32(paq.Valor)
-		if paq.Tipo == "Prioritario" {
+		if paq.Tipo == "prioritario" {
 			ganancia = ganancia + ganancia*0.3
 		}
 		ganancia = ganancia - float32(paq.Intentos+1)*10.0
@@ -91,6 +92,7 @@ func IntentaEntregar(paq *sm.Paquete, conn *grpc.ClientConn, ready bool, te int)
 		paq.Estado = "Recibido"
 		ready = true
 		tiempoEntrega = time.Now().Format("2006-01-02 15:04:05")
+
 	}
 	//SendEstado
 	go EntregaPosicionEntregaActual(conn, paq)
@@ -116,6 +118,7 @@ func CamionEntregaPaquetes(cam *Camion, conn *grpc.ClientConn, te int) {
 				cam.paq1.Estado = "Recibido"
 				cam.fechaEntrega1 = t1
 				ready = true
+
 			}
 			if r2 == 1 && ready2 != true {
 				cam.paq2.Estado = "Recibido"
@@ -221,18 +224,56 @@ func CamionDisponible(conn *grpc.ClientConn, cam *Camion) *sm.Paquete {
 	return response
 }
 
+//ComparaPaquete  para que sepa si es vacio porque las funciones de comparacion no sirven.
+func ComparaPaquete(paq1 *sm.Paquete, paq2 *sm.Paquete) bool {
+	if paq1.CodigoSeguimiento != paq2.CodigoSeguimiento {
+		return false
+	}
+	if paq1.Destino != paq2.Destino {
+		return false
+	}
+	if paq1.Estado != paq2.Estado {
+		return false
+	}
+	if paq1.Id != paq2.Id {
+		return false
+	}
+	if paq1.Intentos != paq2.Intentos {
+		return false
+	}
+	if paq1.Nombre != paq2.Nombre {
+		return false
+	}
+	if paq1.Origen != paq2.Origen {
+		return false
+	}
+	if paq1.Destino != paq2.Destino {
+		return false
+	}
+	if paq1.Tipo != paq2.Tipo {
+		return false
+	}
+	if paq1.Valor != paq2.Valor {
+		return false
+	}
+	return true
+}
+
 //CamionEspera camión que no tiene paquetes recibe un paquete, y luego espera a poder cargar uno
 func CamionEspera(cam *Camion, conn *grpc.ClientConn, ti int, te int) {
 	csv := CreaRegistro(cam)
+	EmptyPaq := &sm.Paquete{}
 	defer wg.Done()
+	tRec := time.Now()
 	//Por ahora ciclo infinito simplemente
 	for {
-		tRec := time.Now()
-		for (cam.paq1 == &sm.Paquete{}) {
+		log.Printf("Camion %d en espera de paquete", cam.id)
+		for ComparaPaquete(cam.paq1, EmptyPaq) {
 			cam.paq1 = CamionDisponible(conn, cam)
 			tRec = time.Now().Add(time.Millisecond * time.Duration(ti))
 		}
-		for (cam.paq2 == &sm.Paquete{} || tRec.Sub(time.Now()) > time.Duration(0)) {
+		log.Printf("Camion %d recibe paquete 1, espera por paquete 2.", cam.id)
+		for ComparaPaquete(cam.paq2, EmptyPaq) && (tRec.Sub(time.Now()) > time.Duration(0)) {
 			cam.paq2 = CamionDisponible(conn, cam)
 			//Por ahora lo deje así para que no mande tantos mensajes.
 			time.Sleep(500 * time.Millisecond)
@@ -240,8 +281,10 @@ func CamionEspera(cam *Camion, conn *grpc.ClientConn, ti int, te int) {
 		cam.disponible = false
 		//Paquetes salen de central
 		cam.paq1.Estado = "En Camino"
-		if (cam.paq2 != &sm.Paquete{}) {
+		log.Printf("Camion %d sale de central con paquete 1 con id %s.", cam.id, cam.paq1.Id)
+		if !ComparaPaquete(cam.paq2, &sm.Paquete{}) {
 			cam.paq1.Estado = "En Camino"
+			log.Printf("Camion %d sale de central con paquete 2 con id %s.", cam.id, cam.paq2.Id)
 		}
 
 		CamionEntregaPaquetes(cam, conn, te)
@@ -254,22 +297,24 @@ func CamionEspera(cam *Camion, conn *grpc.ClientConn, ti int, te int) {
 		}
 
 		//Camion avisa que vuelve a central.
+		log.Printf("Camion %d vuelve a central.", cam.id)
 		InformaPaqueteLogistica(conn, cam)
 
 		EditaResigtro(cam, csv)
-		VaciaCamion(cam)
+		cam = VaciaCamion(cam)
 		//Camion vuelve a avisar que esta en espera de mas paquetes.
 	}
 
 }
 
 //VaciaCamion vacia los paquetes en central y vuelve a estar disponible
-func VaciaCamion(cam *Camion) {
+func VaciaCamion(cam *Camion) *Camion {
 	cam.paq1 = &sm.Paquete{}
 	cam.paq2 = &sm.Paquete{}
 	cam.disponible = true
 	cam.fechaEntrega1 = "0"
 	cam.fechaEntrega2 = "0"
+	return cam
 }
 
 //CreaRegistro en el que escribira el camion.
@@ -293,10 +338,11 @@ func CreaRegistro(cam *Camion) *os.File {
 //EditaResigtro agrega registro del camion a el csv file.
 func EditaResigtro(cam *Camion, csvFile *os.File) {
 	csvwriter := csv.NewWriter(csvFile)
+	defer csvwriter.Flush()
 	val := []string{cam.paq1.Id, cam.paq1.Tipo, strconv.Itoa(int(cam.paq1.Valor)), cam.paq1.Origen, cam.paq1.Destino, strconv.Itoa(int(cam.paq1.Intentos)), cam.fechaEntrega1}
 	csvwriter.Write(val)
 	if (cam.paq2 != &sm.Paquete{}) {
-		val := []string{cam.paq2.Id, cam.paq2.Tipo, strconv.Itoa(int(cam.paq2.Valor)), cam.paq2.Origen, cam.paq2.Destino, strconv.Itoa(int(cam.paq2.Intentos)), cam.fechaEntrega2}
+		val = []string{cam.paq2.Id, cam.paq2.Tipo, strconv.Itoa(int(cam.paq2.Valor)), cam.paq2.Origen, cam.paq2.Destino, strconv.Itoa(int(cam.paq2.Intentos)), cam.fechaEntrega2}
 		csvwriter.Write(val)
 	}
 }

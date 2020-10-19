@@ -5,6 +5,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"reflect"
 	"strconv"
 	"sync"
 	"time"
@@ -196,11 +197,22 @@ func EditaResigtro(cam *Camion, csvFile *os.File) {
 	csvwriter.Write(val)
 }
 
+func selectf(paq *sm.Paquete, p chan string) {
+	if paq.Id != "" {
+		paq.Id = "2"
+		p <- paq.Id
+	}
+	paq.Id = "1"
+	p <- paq.Id
+}
+
 func main() {
 
 	c1 := Camion{1, "Retail", true, &sm.Paquete{}, &sm.Paquete{}}
 	c2 := Camion{2, "Retail", true, &sm.Paquete{}, &sm.Paquete{}}
 	c3 := Camion{3, "Normal", true, &sm.Paquete{}, &sm.Paquete{}}
+
+	log.Println(reflect.DeepEqual(c1.paq1, &sm.Paquete{}))
 
 	wg.Add(1)
 	go inicializa(&c1)
@@ -245,4 +257,5 @@ func main() {
 	log.Println(arrPaq)
 
 	wg.Wait()
+
 }
