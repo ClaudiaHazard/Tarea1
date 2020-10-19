@@ -280,7 +280,7 @@ func main() {
 	csvFile = CreaRegistro()
 
 	//Crea la conexion RabbitMQ
-	conn, err := amqp.Dial(ipportrabbitmq)
+	conn, err = amqp.Dial(ipportrabbitmq)
 
 	//failOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
