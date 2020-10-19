@@ -61,7 +61,7 @@ func EntregaPaquete(te int) int {
 func ReintentaEntregar(paq *sm.Paquete) int {
 	if paq.Tipo == "retail" {
 		if paq.Intentos < 3 {
-			println("REINTENTA")
+
 			return 1
 		}
 		return 0
@@ -75,7 +75,7 @@ func ReintentaEntregar(paq *sm.Paquete) int {
 		}
 		ganancia = ganancia - float32(paq.Intentos+1)*10.0
 		if ganancia > 0 {
-			println("REINTENTA")
+
 			return 1
 		}
 		return 0
@@ -131,11 +131,15 @@ func CamionEntregaPaquetes(cam *Camion, conn *grpc.ClientConn, te int) {
 			if cam.paq1.Estado != "Recibido" {
 				if ReintentaEntregar(cam.paq1) == 0 {
 					ready = true
+				} else {
+					cam.paq1.Intentos = cam.paq1.Intentos + 1
 				}
 			}
 			if cam.paq2.Estado != "Recibido" {
 				if ReintentaEntregar(cam.paq2) == 0 {
 					ready2 = true
+				} else {
+					cam.paq2.Intentos = cam.paq2.Intentos + 1
 				}
 			}
 		} else {
@@ -155,11 +159,15 @@ func CamionEntregaPaquetes(cam *Camion, conn *grpc.ClientConn, te int) {
 			if cam.paq2.Estado != "Recibido" {
 				if ReintentaEntregar(cam.paq2) == 0 {
 					ready = true
+				} else {
+					cam.paq2.Intentos = cam.paq2.Intentos + 1
 				}
 			}
 			if cam.paq1.Estado != "Recibido" {
 				if ReintentaEntregar(cam.paq1) == 0 {
 					ready2 = true
+				} else {
+					cam.paq1.Intentos = cam.paq1.Intentos + 1
 				}
 			}
 		}
