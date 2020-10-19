@@ -132,7 +132,7 @@ func main() {
 			tip = entry.Tipo
 			unit = entry.Valor
 			line := getLastLineWithSeek("caja.csv")
-			if aidi != "0" {
+			if aidi != "0" and !=""{
 
 				//int prii, int tries, bool reci, string ret
 				//cálculo de ganancia/pérdida
@@ -154,7 +154,7 @@ func main() {
 				x := []string{strconv.Itoa(count), aidi, strconv.Itoa(tri), strconv.FormatBool(recei), fmt.Sprintf("%f", tot), fmt.Sprintf("%f", TT)}
 				csvWriter := csv.NewWriter(csvfile)
 				strWrite := [][]string{x}
-				fmt.Println(strWrite)
+				//fmt.Println(strWrite)
 				csvWriter.WriteAll(strWrite)
 				csvWriter.Flush()
 				csvfile.Close()
