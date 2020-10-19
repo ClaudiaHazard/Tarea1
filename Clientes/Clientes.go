@@ -77,7 +77,7 @@ func GeneraOrdenFromString(record []string, tipo string) *sm.Orden {
 	order[2] = record[1]
 	order[3] = record[2]
 	order[4] = record[3]
-	order[5] = record[4]
+	order[5] = record [4]
 	if tipo == "retail" {
 		order[0] = "retail"
 	} else {
@@ -193,7 +193,7 @@ func main() {
 			if tipo != "retail" && tipo != "pyme" {
 				fmt.Println("Valor erroneo")
 			} else {
-				go CreaOrdenTipo(tipo, conn, allretail, allpyme)
+				go CreaOrdenTipo(tipo, conn, allpyme, allretail)
 				tOrden = time.Now().Add(time.Millisecond * time.Duration(t))
 			}
 
