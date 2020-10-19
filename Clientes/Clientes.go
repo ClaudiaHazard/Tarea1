@@ -182,6 +182,7 @@ func main() {
 			}
 		} else {
 			fmt.Println("Ingrese 1 para Realizar seguimiento o 0 para finalizar")
+			fmt.Scanln(&num)
 			wg.Wait()
 			go PideSegui(conn)
 		}
