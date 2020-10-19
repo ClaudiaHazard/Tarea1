@@ -92,10 +92,12 @@ func Ordenar(tii string, c *grpc.ClientConn, pym [][]string, reta [][]string) {
 		ins = reta[rand.Intn(len(reta)-2)+1]
 		IndividualOrder(ins, tii, c)
 		fmt.Println("Orden retail ingresada")
-	} else {
+	} else if tii == "pyme" {
 		ins = pym[rand.Intn(len(pym)-2)+1]
 		r := IndividualOrder(ins, tii, c)
-		fmt.Printf("Orden pyme ingresada, este es su codigo de seguimiento: %d", r)
+		fmt.Printf("Orden pyme ingresada, este es su codigo de seguimiento: %d\n", r)
+	} else {
+		fmt.Printf("Ingrese tipo pyme o retail")
 	}
 }
 
