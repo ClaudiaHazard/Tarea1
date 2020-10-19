@@ -84,42 +84,50 @@ func IndividualOrder(record []string, tipo string, c *grpc.ClientConn) int32 {
 
 }
 
-//DoOrder recibe todos los datos de los csv, seleccionando uno al azar dependiendo del tipo de cliente
-func DoOrder(pym [][]string, reta [][]string, c *grpc.ClientConn, m int) {
-	defer wg.Done()
-	var tii string
-	var ins []string
-	tii = ""
+//Ordenar realiza orden de un cliente.
+func Ordenar(tii string, c *grpc.ClientConn, pym [][]string, reta [][]string) {
 
-	fmt.Println("Ingrese tipo de cliente (retail o pyme): ")
-	fmt.Scanln(&tii)
+	var ins []string
 	if tii == "retail" {
 		ins = reta[rand.Intn(len(reta)-2)+1]
 		IndividualOrder(ins, tii, c)
 		fmt.Println("Orden retail ingresada")
-	} else if tii == "pyme" {
+	} else {
 		ins = pym[rand.Intn(len(pym)-2)+1]
 		r := IndividualOrder(ins, tii, c)
 		fmt.Printf("Orden pyme ingresada, este es su codigo de seguimiento: %d\n", r)
-	} else {
-		fmt.Printf("Ingrese valor valido")
 	}
+}
 
+//DoOrder recibe todos los datos de los csv, seleccionando uno al azar dependiendo del tipo de cliente
+func DoOrder(pym [][]string, reta [][]string, c *grpc.ClientConn, m int) {
+	defer wg.Done()
+	var tii string
+	for {
+
+		fmt.Println("Ingrese tipo de cliente (retail o pyme): ")
+		fmt.Scanln(&tii)
+		wg.Add(1)
+		go Ordenar(tii, c, pym, reta)
+
+		time.Sleep(time.Duration(m) * time.Second)
+	}
 }
 
 //PideSegui solicita ifnormación de un pquete con su código de seguimiento
 func PideSegui(c *grpc.ClientConn) {
 	defer wg.Done()
 	time.Sleep(5 * time.Second)
-	var codd int32
-	fmt.Println("Ingrese codigo de seguimiento: ")
-	fmt.Scanln(&codd)
+	for {
+		var codd int32
+		fmt.Println("Ingrese codigo de seguimiento: ")
+		fmt.Scanln(&codd)
 
-	//envío y recepción de info de estado
-	info := EnviaCodCliente(c, codd)
-	//mostrar info
-	fmt.Println("Estado del paquete: ", info)
-
+		//envío y recepción de info de estado
+		info := EnviaCodCliente(c, codd)
+		//mostrar info
+		fmt.Println("Estado del paquete: ", info)
+	}
 }
 func main() {
 
@@ -136,6 +144,7 @@ func main() {
 	defer conn.Close()
 
 	fmt.Println("Ingrese tiempo de espera entre órdenes en segundos: ")
+
 	fmt.Scanln(&t)
 	fmt.Println("Ingrese nombre de archivo csv retail(ejemplo: si es retail.csv usted escribe retail): ")
 	fmt.Scanln(&fx)
@@ -164,30 +173,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var num int
-	tRec := time.Now()
-	num = 10
-	for num != 0 {
-		if tRec.Sub(time.Now()) < time.Duration(0) {
-			fmt.Println("Ingrese 1 para Realizar orden, 2 para realizar seguimiento, para finalizar 0: ")
-			fmt.Scanln(&num)
-			if num == 1 {
-				wg.Wait()
-				go DoOrder(allpyme, allretail, conn, t)
-				tRec = time.Now().Add(time.Millisecond * time.Duration(t))
-			}
-			if num == 2 {
-				wg.Wait()
-				go PideSegui(conn)
-			}
-		} else {
-			fmt.Println("Ingrese 1 para Realizar seguimiento o 0 para finalizar")
-			fmt.Scanln(&num)
-			wg.Wait()
-			go PideSegui(conn)
-		}
-
-	}
+	wg.Add(1)
+	go DoOrder(allpyme, allretail, conn, t)
+	wg.Add(1)
+	go PideSegui(conn)
 
 	wg.Wait()
 }
