@@ -132,7 +132,7 @@ func main() {
 			tip = entry.Tipo
 			unit = entry.Valor
 			line := getLastLineWithSeek("caja.csv")
-			if aidi != "0" and !=""{
+			if aidi != "0" && !="" {
 
 				//int prii, int tries, bool reci, string ret
 				//cálculo de ganancia/pérdida
