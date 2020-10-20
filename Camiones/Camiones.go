@@ -50,7 +50,7 @@ type CamionResp struct {
 func EntregaPaquete(te int) int {
 	time.Sleep(time.Duration(te) * time.Second)
 	c := rand.Float64()
-	log.Printf("Valor del numero random: %f", c)
+	log.Printf("Valor del numero random para fallar paquete: %f", c)
 	if c < 0.8 {
 		return 1
 	}
